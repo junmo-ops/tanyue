@@ -1,15 +1,29 @@
-# Discuz Reader
+# 坛阅 TanYue
 
 自托管的 Discuz! X3.5 采集与阅读工具。你可以在电脑上定时同步多个论坛，在手机上继续找未读热帖、查看评论或回看某一天的排行榜。每个论坛独立保存帖子、登录状态、阅读记录和定时任务。
 
 ![使用模拟数据的帖子列表](docs/reader-demo.png)
 
-## 第一次使用
+## 从源码启动
 
-1. 解压发行包 `discuz-reader-0.1.0.zip`，进入其中的 `discuz-reader` 目录。安装 Python 3.13 后运行 `python3 forum_api.py`。Windows 可使用 `py -3.13 forum_api.py`。
-2. 打开 [本地阅读器](http://127.0.0.1:8000/)，点击「接入第一个论坛」。输入论坛安装目录，如 `https://forum.example.org/bbs/`。公共板块可以匿名读取；需要登录时使用该论坛属于自己的 Cookie。
-3. 点击「识别板块」，勾选一个板块，用「预览」检查样本帖。接入后在「采集管理 → 新建采集」选择同步列表、指定板块和 **1 页**。任务完成后返回帖子列表，切换到「全部帖子」查看。
-4. 在「方案与定时」为当前站点建立定时任务。调度器随服务运行，电脑需保持唤醒。
+先安装 Git、Python 3.13 和 Node.js 24（含 npm）。在终端运行：
+
+```sh
+git clone https://github.com/junmo-ops/tanyue.git
+cd tanyue
+npm --prefix frontend ci
+npm --prefix frontend run build
+python3 forum_api.py
+```
+
+Windows 上最后一行可用 `py -3.13 forum_api.py`。后端使用 Python 标准库。启动后打开 [本地阅读器](http://127.0.0.1:8000/)，按 Ctrl+C 停止服务。下次使用时，在项目目录直接运行启动命令即可。
+
+## 接入第一个论坛
+
+1. 点击「接入第一个论坛」，输入论坛安装目录，如 `https://forum.example.org/bbs/`。公共板块可以匿名读取；需要登录时使用该论坛属于自己的 Cookie。
+2. 点击「识别板块」，勾选一个板块，用「预览」检查样本帖。
+3. 接入后在「采集管理 → 新建采集」选择同步列表、指定板块和 **1 页**。任务完成后返回帖子列表，切换到「全部帖子」查看。
+4. 如需自动采集，在「方案与定时」为当前站点建立定时任务。调度器随服务运行，电脑需保持唤醒。
 
 ## 手机访问
 
@@ -37,14 +51,11 @@ python3 forum_api.py --host "$(tailscale ip -4)"
 
 服务停止后备份整个 `data/` 目录，以及自行创建的 `config.json`。各站点的 `cookie.txt` 属于登录凭据，备份应按敏感数据保管。首次安装自动使用 `config.example.json`；需要自定义数据库路径时可复制为 `config.json`。
 
-源码开发使用 Python 3.13 和 Node.js 24，在仓库根目录运行：
+提交代码前，在项目根目录运行前端检查和后端测试：
 
 ```sh
-npm --prefix frontend ci
 npm --prefix frontend run lint
-npm --prefix frontend run build
 python3 -m unittest discover -s tests
-python3 forum_api.py
 ```
 
-运行 `python3 scripts/package_release.py` 生成包含网页和后端的 ZIP。代码采用 MIT 许可证，前端依赖的许可信息随构建产物保存在 `web/THIRD-PARTY.md`。问题反馈请附版本、失败步骤与脱敏错误信息，移除 Cookie、真实帖子、私有域名和数据库。
+代码采用 MIT 许可证，前端依赖的许可信息位于构建产物 `web/THIRD-PARTY.md`。反馈问题时请附提交编号、失败步骤和脱敏错误信息。

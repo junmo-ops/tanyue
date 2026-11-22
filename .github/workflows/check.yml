@@ -3,7 +3,7 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
-  release:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +19,3 @@ jobs:
       - run: npm --prefix frontend ci
       - run: npm --prefix frontend run lint
       - run: npm --prefix frontend run build
-      - run: python scripts/package_release.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: discuz-reader
-          path: dist/*.zip
