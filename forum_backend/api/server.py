@@ -10,6 +10,9 @@ import ipaddress
 import mimetypes
 import re
 import socket
+import shutil
+import secrets
+import threading
 import sqlite3
 import subprocess
 import sys
@@ -69,6 +72,17 @@ class ForumRequestHandler(BaseHTTPRequestHandler):
     def _authorized(self):
         host = self.headers.get('Host', '')
         if getattr(self.server, 'local_only', False) and host.split(':')[0].lower() not in ('localhost', '127.0.0.1'):
+            self.send_error(403)
+            return False
+        trusted = getattr(self.server, 'trusted_subnet', None)
+        if trusted is not None:
+            if (host.partition(':')[0] != self.server.server_address[0]
+                    or ipaddress.ip_address(self.client_address[0]) not in trusted):
+                self.send_error(403)
+                return False
+        cli = getattr(self.server, 'tailscale_cli', None)
+        if cli and (host.partition(':')[0] != self.server.server_address[0]
+                    or not is_tailnet_peer(cli, self.client_address[0])):
             self.send_error(403)
             return False
         origin = self.headers.get('Origin')
@@ -376,7 +390,7 @@ class ForumServer(ThreadingHTTPServer):
         self.sites = SiteRegistry(self)
 
 
-def lan_ipv4_candidates() -> list[str]:
+def lan_ipv4_candidates(subnets=None) -> list[str]:
     """Best-effort local interface discovery; never advertise loopback addresses."""
     candidates = []
     if sys.platform == 'darwin':
@@ -396,6 +410,12 @@ def lan_ipv4_candidates() -> list[str]:
                 parts = line.split()
                 if len(parts) >= 2 and parts[0] == 'inet':
                     addresses.append(parts[1])
+                    if subnets is not None and interface.startswith('en') and len(parts) >= 4 and parts[2] == 'netmask':
+                        try:
+                            mask = str(ipaddress.IPv4Address(int(parts[3], 16)))
+                            subnets[parts[1]] = ipaddress.IPv4Network((parts[1], mask), strict=False)
+                        except ValueError:
+                            pass
                 if parts == ['status:', 'active']:
                     active = True
         except (OSError, subprocess.SubprocessError):
@@ -430,7 +450,77 @@ def print_access_urls(host: str, port: int) -> None:
             print(f'Check this computer\'s Network settings, then use http://<LAN-IP>:{port}/admin')
 
 
-def run_server(config_path: str = DEFAULT_CONFIG, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
+def start_lan_listener(server, trusted_subnet=None, *, private_access=False):
+    networks = tuple(ipaddress.ip_network(cidr) for cidr in ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'))
+    subnets = {}
+    for address in lan_ipv4_candidates(subnets):
+        if not any(ipaddress.ip_address(address) in network for network in networks):
+            continue
+        network = subnets.get(address)
+        if private_access and (not network or not any(network.subnet_of(private) for private in networks)):
+            continue
+        try:
+            lan = ThreadingHTTPServer((address, server.server_port), ForumRequestHandler)
+        except OSError:
+            continue
+        lan.sites = server.sites
+        lan.static_root = server.static_root
+        lan.credential = None if private_access else server.credential
+        lan.trusted_subnet = None
+        if (not lan.credential and network and (private_access or str(network) == trusted_subnet)
+                and any(network.subnet_of(private) for private in networks)):
+            lan.trusted_subnet = network
+        if not lan.credential and not lan.trusted_subnet:
+            password = secrets.token_urlsafe(9)
+            lan.credential = b'Basic ' + base64.b64encode(('admin:' + password).encode())
+            print(f'手机登录密码：{password}')
+        login = '本地子网免密' if lan.trusted_subnet else '用户名：admin'
+        print(f'同一局域网访问：http://{address}:{server.server_port}/ （{login}）')
+        threading.Thread(target=lan.serve_forever, daemon=True).start()
+        return lan
+    print('未找到可监听的私有局域网地址，当前仅支持本机访问。')
+    return None
+
+
+TAILNET_V4 = ipaddress.ip_network('100.64.0.0/10')
+
+
+def is_tailnet_peer(cli, peer):
+    try:
+        if ipaddress.ip_address(peer) not in TAILNET_V4:
+            return False
+        result = subprocess.run([cli, 'whois', '--json', peer], check=True,
+                                capture_output=True, text=True, timeout=3)
+        node = json.loads(result.stdout).get('Node') or {}
+        return peer + '/32' in node.get('Addresses', [])
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+
+
+def start_tailnet_listener(server):
+    cli = shutil.which('tailscale')
+    if not cli and Path('/Applications/Tailscale.app/Contents/MacOS/Tailscale').is_file():
+        cli = '/Applications/Tailscale.app/Contents/MacOS/Tailscale'
+    if not cli:
+        return None
+    try:
+        result = subprocess.run([cli, 'ip', '-4'], check=True, capture_output=True, text=True, timeout=3)
+        address = ipaddress.IPv4Address(result.stdout.strip())
+        if address not in TAILNET_V4:
+            return None
+        tailnet = ThreadingHTTPServer((str(address), server.server_port), ForumRequestHandler)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        print('Tailscale 入口未开启，请确认 Tailscale 已连接后重新启动坛阅。')
+        return None
+    tailnet.sites = server.sites
+    tailnet.static_root = server.static_root
+    tailnet.tailscale_cli = cli
+    threading.Thread(target=tailnet.serve_forever, daemon=True).start()
+    print(f'Tailscale 访问：http://{address}:{server.server_port}/')
+    return tailnet
+
+
+def run_server(config_path: str = DEFAULT_CONFIG, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, *, auto_lan: bool = False) -> None:
     """启动本地 API 与前端静态文件服务。"""
     config = load_config(config_path)
     database_path = resolve_database_path(config)
@@ -440,12 +530,25 @@ def run_server(config_path: str = DEFAULT_CONFIG, host: str = DEFAULT_HOST, port
     conn = init_db(database_path)
     conn.close()
     server = ForumServer((host, port), ForumRequestHandler, database_path, base_url, static_root, environment, config)
+    lan = tailnet = None
+    private_access = (auto_lan and host == DEFAULT_HOST
+                      and config.get('server', {}).get('private_network_access') is True)
     try:
         print_access_urls(host, server.server_port)
+        if private_access:
+            server.credential = None
+            lan = start_lan_listener(server, private_access=True)
+            tailnet = start_tailnet_listener(server)
+        elif auto_lan and host == DEFAULT_HOST and (sys.stdout.isatty() or server.credential):
+            lan = start_lan_listener(server, config.get('server', {}).get('trusted_lan_subnet'))
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nLocal forum browser stopped.")
     finally:
+        for listener in (lan, tailnet):
+            if listener is not None:
+                listener.shutdown()
+                listener.server_close()
         server.sites.close()
         server.crawl_jobs.close()
         server.comment_jobs.close()

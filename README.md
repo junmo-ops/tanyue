@@ -27,15 +27,16 @@ Windows 上最后一行可用 `py -3.13 forum_api.py`。后端使用 Python 标�
 
 ## 手机访问
 
-本机默认监听 `127.0.0.1:8000`。通过 Tailscale 访问时，先让电脑和手机加入同一个私有网络，在电脑终端设置环境变量 `FORUM_PASSWORD`，然后绑定电脑的 Tailscale 地址。例如在 zsh 中运行：
+在 macOS 上启用私有网络免密访问后，运行 `python3 forum_api.py`，手机直接打开终端打印的地址即可。
 
-```sh
-read -rs 'FORUM_PASSWORD?管理密码：'
-export FORUM_PASSWORD
-python3 forum_api.py --host "$(tailscale ip -4)"
-```
+| 手机连接方式 | 打开什么地址 |
+| --- | --- |
+| 和 Mac 在同一 Wi-Fi | 打开「同一局域网访问」地址。 |
+| 使用 5G 或其他 Wi-Fi | 先在 Mac 上连接 Tailscale，再启动坛阅。手机连入同一 Tailscale 网络后，打开「Tailscale 访问」地址。 |
 
-在手机上打开 `http://电脑的Tailscale地址:8000/`，用户名为 `admin`，密码为刚才输入的值。局域网访问可将 `--host` 指向电脑的局域网 IPv4 地址。浏览器使用 HTTP Basic 认证，请在加密隧道或 HTTPS 连接中传输凭据。该服务面向单人使用，具有登录凭据的设备可以读写所有站点。
+**首次启用**：在仓库根目录打开 `config.json`。如果文件还不存在，先复制一份 `config.example.json` 并命名为 `config.json`。在顶层的 `server` 对象中设置 `"private_network_access": true`（没有 `server` 时添加该对象），保存后重启坛阅。之后每次直接运行启动命令即可。
+
+此模式下，同一私有局域网子网中的设备和通过 Tailscale 身份检查的设备均可读写站点，包括采集管理。新克隆的项目默认未启用此模式；使用默认配置时，局域网登录信息会显示在启动终端。只需本机访问时，可运行 `python3 forum_api.py --host 127.0.0.1`。
 
 ## 兼容范围
 

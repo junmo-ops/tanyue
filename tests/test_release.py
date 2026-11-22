@@ -17,13 +17,13 @@ from forum_backend.services.sites import SiteRegistry
 
 
 class ReleaseTests(unittest.TestCase):
-    def request(self, server, headers):
+    def request(self, server, headers, peer='127.0.0.1'):
         conn = Mock()
         conn.makefile.return_value = BytesIO(f'GET /api/sites HTTP/1.0\r\n{headers}\r\n\r\n'.encode())
         chunks = []
         conn.sendall.side_effect = chunks.append
         with patch.object(ForumRequestHandler, 'log_message'):
-            ForumRequestHandler(conn, ('127.0.0.1', 0), server)
+            ForumRequestHandler(conn, (peer, 0), server)
         return b''.join(chunks)
 
     def test_empty_install_and_first_forum_survive_restart(self):
@@ -58,6 +58,15 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn(b'403 Forbidden', self.request(server, 'Host: unrelated.example'))
         with patch.dict(os.environ, {'FORUM_PASSWORD':''}), self.assertRaisesRegex(ValueError, 'FORUM_PASSWORD'):
             ForumServer(('0.0.0.0', 0), ForumRequestHandler, '', '', Path('.'))
+
+    def test_trusted_subnet_checks_source_and_host(self):
+        from ipaddress import ip_network
+        server = SimpleNamespace(trusted_subnet=ip_network('192.168.1.0/24'),
+                                 server_address=('192.168.1.20', 8000),
+                                 sites=SimpleNamespace(listing=lambda: {'items': []}))
+        self.assertIn(b'200 OK', self.request(server, 'Host: 192.168.1.20:8000', '192.168.1.33'))
+        self.assertIn(b'403 Forbidden', self.request(server, 'Host: 192.168.1.20:8000', '192.168.2.33'))
+        self.assertIn(b'403 Forbidden', self.request(server, 'Host: another.example', '192.168.1.33'))
 
     def test_private_destinations_and_cross_origin_redirects_are_rejected(self):
         with patch('socket.getaddrinfo', return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('127.0.0.1', 443))]), patch('socket.socket') as connect:

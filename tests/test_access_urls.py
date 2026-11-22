@@ -2,7 +2,7 @@ import io
 import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
-from forum_backend.api.server import lan_ipv4_candidates, print_access_urls
+from forum_backend.api.server import lan_ipv4_candidates, print_access_urls, start_lan_listener
 
 
 class AccessUrlsTests(unittest.TestCase):
@@ -40,6 +40,24 @@ utun0: flags=8051
         with patch('forum_backend.api.server.sys.platform', 'win32'), \
              patch('forum_backend.api.server.socket.getaddrinfo', return_value=rows):
             self.assertEqual(lan_ipv4_candidates(), ['192.168.1.20'])
+
+    def test_auto_listener_binds_one_private_address_and_requires_login(self):
+        server = SimpleNamespace(server_port=8000, sites=object(), static_root='web', credential=None)
+        with patch('forum_backend.api.server.lan_ipv4_candidates', return_value=['8.8.8.8', '192.168.1.20']), \
+             patch('forum_backend.api.server.ThreadingHTTPServer') as listener, \
+             patch('forum_backend.api.server.threading.Thread'), patch('builtins.print'):
+            lan = start_lan_listener(server)
+        self.assertEqual(listener.call_args.args[0], ('192.168.1.20', 8000))
+        self.assertTrue(lan.credential.startswith(b'Basic '))
+        self.assertIs(lan.sites, server.sites)
+
+    def test_tailnet_identity_must_match_socket_peer(self):
+        from forum_backend.api.server import is_tailnet_peer
+        response = SimpleNamespace(stdout='{"Node":{"Addresses":["100.64.0.7/32"]}}')
+        with patch('forum_backend.api.server.subprocess.run', return_value=response):
+            self.assertTrue(is_tailnet_peer('tailscale', '100.64.0.7'))
+            self.assertFalse(is_tailnet_peer('tailscale', '100.64.0.8'))
+            self.assertFalse(is_tailnet_peer('tailscale', '192.168.1.7'))
 
     def test_loopback_binding_does_not_advertise_lan_access(self):
         with patch('forum_backend.api.server.lan_ipv4_candidates') as discover, patch('sys.stdout', new_callable=io.StringIO) as output:
