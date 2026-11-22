@@ -37,10 +37,10 @@ def seed_test_database(database_path: str = DEFAULT_TEST_DB, thread_count: int =
 def _insert_threads(conn: sqlite3.Connection, thread_count: int) -> None:
     """插入覆盖多板块、多状态和多指标分布的测试帖子。"""
     forums = [
-        ("166", "AI专区"),
-        ("95", "综合讨论区"),
-        ("97", "工具分享"),
-        ("141", "作品展示"),
+        ("901", "示例技术交流"),
+        ("902", "示例日常分享"),
+        ("903", "示例工具笔记"),
+        ("904", "示例作品展示"),
     ]
     statuses = ["pending", "fetched", "failed"]
     rows = []

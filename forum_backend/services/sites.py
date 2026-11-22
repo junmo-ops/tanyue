@@ -155,6 +155,7 @@ class SiteRegistry:
         config['details']['purchase_count_money_fids'] = []
         config['list_sync'].pop('fids', None)
         config['list_sync']['forums'] = record['forums']
+        config['forum_names'] = record.get('forum_names', {})
         init_db(path).close()
         comments = CommentJobs(path, record['url'], config)
         try:

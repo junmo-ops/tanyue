@@ -1,6 +1,7 @@
 import { siteUrl } from '../api/site.js'
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Button, Grid, Segmented, Skeleton, Table } from 'antd'
+import { Grid, Table } from 'antd'
+import { useControls } from '../useControls.js'
 import { ArrowLeftOutlined, TrophyOutlined } from '@ant-design/icons'
 import { requestJson } from '../api/client.js'
 import ThemeToggle from '../ThemeToggle.jsx'
@@ -41,6 +42,7 @@ function RankedThread({ entry, mobile = false }) {
 }
 
 export default function RankingsPage({ location, onBack, onNavigate }) {
+  const { Alert, Button, Segmented, Skeleton } = useControls()
   const isMobile = !Grid.useBreakpoint().md
   const params = new URLSearchParams(location.split('?')[1])
   const metric = metrics.find(item => item.value === params.get('metric')) || metrics[0]

@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Empty, Grid, Pagination, Table } from 'antd'
+import { Grid, Table } from 'antd'
+import { useControls } from '../../useControls.js'
 
 // Keep the same fields and actions in desktop tables and mobile cards.
 export default function ResponsiveRecords({ columns, dataSource, pagination, renderMobileActions, ...props }) {
+  const { Empty, Pagination } = useControls()
   const screens = Grid.useBreakpoint()
   const [page, setPage] = useState(1)
   if (screens.md !== false) return <Table {...props} columns={columns} dataSource={dataSource} pagination={pagination} />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Button, Empty, Skeleton, Spin } from 'antd'
+import { useControls } from '../useControls.js'
 import { SyncOutlined, TagsOutlined } from '@ant-design/icons'
 import { requestJson } from '../api/client.js'
 import ReaderHeader from '../ReaderHeader.jsx'
@@ -19,6 +19,7 @@ function fetchBatch() {
 }
 
 export default function WordsPage({ onBackToThreads }) {
+  const { Alert, Button, Empty, Skeleton, Spin } = useControls()
   const [items, setItems] = useState(savedBatch || [])
   const [loading, setLoading] = useState(savedBatch === null)
   const [error, setError] = useState('')

@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { Empty } from 'antd'
+import { useControls } from '../../useControls.js'
 import ThreadLinks from './InsightThreadLinks.jsx'
 import { INSIGHT_TABS as TABS } from './insightState.js'
 import './PeriodInsights.css'
@@ -14,6 +14,7 @@ function timeLabel(value) {
 
 
 function Overview({ data, onExplore, onTab }) {
+  const { Empty } = useControls()
   const { overview, period } = data
   const dailyMax = Math.max(1, ...overview.daily.map(item => item.count))
   const forumMax = Math.max(1, ...overview.forums.map(item => item.count))
@@ -53,6 +54,7 @@ function Overview({ data, onExplore, onTab }) {
 }
 
 function Missed({ data, onExplore, onSeen, seenTids }) {
+  const { Empty } = useControls()
   return <>
     <div className="insight-section-intro"><p>精选 {number(data.total)} 篇 · 展示前 {number(data.items.length)} 篇</p><button onClick={() => onExplore({ hideSeen: true })}>查看全部未看</button></div>
     <details className="insight-explanation"><summary>筛选说明 · 已打开的帖子刷新后移除</summary><p>从同板块、同发帖日的帖子中挑选互动较高且尚未标记已看的内容，排除“不感兴趣”。热门仅供发现参考。打开后保留原位，点击“刷新分析”再更新名单。</p></details>
@@ -61,6 +63,7 @@ function Missed({ data, onExplore, onSeen, seenTids }) {
 }
 
 function Topics({ data, onExplore, onSeen, seenTids }) {
+  const { Empty } = useControls()
   return <>
     <p className="insight-note">比较标题中话题的帖子占比；每篇帖子对同一话题只计一次，至少出现于 3 篇帖子。这里只反映采集样本的变化。</p>
     {data.length ? <div className="insight-card-grid">{data.map(item => <section className="insight-topic-card" key={item.word}>
@@ -73,6 +76,7 @@ function Topics({ data, onExplore, onSeen, seenTids }) {
 }
 
 function Authors({ data, onExplore, onSeen, seenTids }) {
+  const { Empty } = useControls()
   return <>
     <p className="insight-note">发现本期至少有 2 篇已收录作品的作者。结合互动表现和兴趣标记提供线索，不代表内容质量评价。</p>
     {data.length ? <div className="insight-card-grid">{data.map(item => <section className="insight-topic-card" key={item.author_id}>
@@ -85,6 +89,7 @@ function Authors({ data, onExplore, onSeen, seenTids }) {
 }
 
 function Growth({ data, onSeen, seenTids }) {
+  const { Empty } = useControls()
   return <>
     <p className="insight-note">本期有记录 {number(data.tracked_count)} 篇 · 可比较 {number(data.eligible_count)} 篇</p>
     <details className="insight-explanation"><summary>增长数据怎么算？</summary><p>按本期内实际采集的两次记录比较，包含更早发布的帖子。每条显示真实观测起止时间，不代表逐日增长速度。{data.note}</p></details>

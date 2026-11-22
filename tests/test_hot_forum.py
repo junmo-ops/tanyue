@@ -454,7 +454,7 @@ class HotForumTests(unittest.TestCase):
                     first,
                     source_page=3,
                     seen_at="2026-05-22 10:00:00",
-                    forum_name="综合讨论区",
+                    forum_name="示例讨论板块",
                     fid="95",
                 )
                 conn.execute(
@@ -475,7 +475,7 @@ class HotForumTests(unittest.TestCase):
                     second,
                     source_page=4,
                     seen_at="2026-05-22 11:00:00",
-                    forum_name="综合讨论区",
+                    forum_name="示例讨论板块",
                     fid="95",
                 )
                 row = conn.execute(
@@ -492,7 +492,7 @@ class HotForumTests(unittest.TestCase):
         self.assertEqual(row["tid"], "101")
         self.assertEqual(row["title"], "Updated title")
         self.assertEqual(row["fid"], "95")
-        self.assertEqual(row["forum_name"], "综合讨论区")
+        self.assertEqual(row["forum_name"], "示例讨论板块")
         self.assertEqual(row["author_id"], "1")
         self.assertEqual(row["reply_count"], 19)
         self.assertEqual(row["view_count"], 120)

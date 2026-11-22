@@ -498,19 +498,19 @@ class ForumApiTests(unittest.TestCase):
         self.assertEqual(status, 500)
         self.assertEqual(body, {"error": "database error"})
 
-    def test_query_forums_maps_names_from_fid_instead_of_stored_values(self):
+    def test_query_forums_prefers_configured_names_and_recovers_stored_labels(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = pathlib.Path(temp_dir) / "forum.db"
             create_test_db(db_path)
 
-            result = forum_api.query_forums(str(db_path), config={"list_sync": {"forums": {"95": "综合讨论区"}}})
+            result = forum_api.query_forums(str(db_path), config={"list_sync": {"forums": {"95": "示例讨论板块"}}})
 
         self.assertEqual(
             result,
             {
                 "items": [
-                    {"fid": "95", "forum_name": "综合讨论区", "thread_count": 3},
-                    {"fid": "96", "forum_name": "fid 96", "thread_count": 1},
+                    {"fid": "95", "forum_name": "示例讨论板块", "thread_count": 3},
+                    {"fid": "96", "forum_name": "Other", "thread_count": 1},
                 ]
             },
         )

@@ -15,12 +15,13 @@ def _default_forum_names() -> dict:
 
 
 def forum_display_name(fid: str, config: dict | None = None, *, fallback: str | None = None) -> str:
-    """Return the configured display label for a forum id."""
+    """Return the current display label, falling back to stored metadata."""
     normalized_fid = str(fid).strip()
     names = (config or {}).get("list_sync", {}).get("forums")
     if names is None:
         names = _default_forum_names()
-    return names.get(normalized_fid) or fallback or f"fid {normalized_fid}"
+    aliases = (config or {}).get("forum_names", {})
+    return names.get(normalized_fid) or aliases.get(normalized_fid) or fallback or f"fid {normalized_fid}"
 
 
 def extract_tid(url: str) -> str:

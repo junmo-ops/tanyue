@@ -213,28 +213,32 @@ def query_threads(database_path: str, base_url: str, params: dict, *, config: di
 def query_forums(database_path: str, configured: tuple[str, ...] = (), *, config: dict | None = None) -> dict:
     """查询已采集和已配置的板块及其帖子数量。"""
     conn = connect_db(database_path)
-    conn.row_factory = sqlite3.Row
     try:
         rows = conn.execute(
             """
-            SELECT fid, COUNT(1) AS thread_count
+            SELECT fid, TRIM(forum_name) AS stored_name, COUNT(*) AS thread_count
             FROM threads
             WHERE fid != ''
-            GROUP BY fid
-            ORDER BY CAST(fid AS INTEGER), fid
+            GROUP BY fid, TRIM(forum_name)
+            ORDER BY CAST(fid AS INTEGER), fid, thread_count DESC, stored_name
             """
         ).fetchall()
     finally:
         conn.close()
 
-    counts = {row["fid"]: row["thread_count"] for row in rows}
+    counts = {}
+    stored_names = {}
+    for fid, stored_name, count in rows:
+        counts[fid] = counts.get(fid, 0) + count
+        if stored_name and stored_name.lower() != f"fid {fid}":
+            stored_names.setdefault(fid, stored_name)
     for fid in configured:
         counts.setdefault(fid, 0)
     return {
         "items": [
             {
                 "fid": fid,
-                "forum_name": forum_display_name(fid, config),
+                "forum_name": forum_display_name(fid, config, fallback=stored_names.get(fid)),
                 "thread_count": count,
             }
             for fid, count in counts.items()

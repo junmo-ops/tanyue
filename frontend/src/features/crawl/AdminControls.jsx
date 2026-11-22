@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Card, Collapse, Dropdown, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Switch, Tabs, Tag, Typography, message } from 'antd'
+import { Popconfirm } from 'antd'
+import { useControls } from '../../useControls.js'
 import { MoreOutlined, PlusOutlined } from '@ant-design/icons'
 import ResponsiveRecords from './ResponsiveRecords.jsx'
 import CrawlWorkModal from './CrawlWorkModal.jsx'
@@ -19,6 +20,7 @@ const fields = [
 const date = (value) => value ? new Date(value * 1000).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) : '—'
 
 export default function AdminControls({ view, isMobile, onQueued, onNavigate, onCreate, forums }) {
+  const { Alert, Button, Card, Collapse, Dropdown, Form, Input, InputNumber, Modal, Select, Space, Switch, Tabs, Tag, Typography, message } = useControls()
   const [data, setData] = useState({ presets: [], schedules: [] })
   const [settingsForm] = Form.useForm()
   const [planForm] = Form.useForm()

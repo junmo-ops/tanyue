@@ -1,5 +1,8 @@
+import MobileSheet from '../MobileSheet.jsx'
+import MobileCalendar from 'antd-mobile/es/components/calendar'
 import { useState } from 'react'
-import { Button, Calendar, Drawer, Popover } from 'antd'
+import { Calendar, Popover } from 'antd'
+import { useControls } from '../useControls.js'
 import { CalendarOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
@@ -13,6 +16,7 @@ function dateKey(timestamp) {
 }
 
 export default function RankingDatePicker({ snapshots, snapshot, isMobile, onChange }) {
+  const { Button } = useControls()
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState(() => dayjs().locale('zh-cn'))
   const dates = new Map()
@@ -50,7 +54,16 @@ export default function RankingDatePicker({ snapshots, snapshot, isMobile, onCha
   </Button>
   return isMobile ? <>
     {trigger}
-    <Drawer title="选择榜单日期" placement="bottom" height="auto" className="rankings-date-drawer"
-      open={open} onClose={() => changeOpen(false)}>{content}</Drawer>
+    <MobileSheet title="选择榜单日期" open={open} onClose={() => changeOpen(false)}>
+      <button type="button" className="reader-sheet-link" onClick={() => choose('')}>最新榜单</button>
+      <MobileCalendar selectionMode="single" weekStartsOn="Monday" allowClear={false}
+        value={selectedDay ? dayjs(selectedDay).toDate() : null}
+        shouldDisableDate={day => !dates.has(dayjs(day).format('YYYY-MM-DD'))}
+        onChange={day => {
+          const id = dates.get(dayjs(day).format('YYYY-MM-DD'))
+          if (id) choose(id)
+        }} />
+      <p>仅可选择有榜单的日期 · 北京时间</p>
+    </MobileSheet>
   </> : <Popover trigger="click" open={open} onOpenChange={changeOpen} content={content} placement="bottomRight">{trigger}</Popover>
 }

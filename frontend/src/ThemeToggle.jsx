@@ -1,9 +1,10 @@
 import { useContext } from 'react'
-import { Button } from 'antd'
+import { useControls } from './useControls.js'
 import { MoonOutlined, SunOutlined } from '@ant-design/icons'
 import { ThemeContext } from './appearance.js'
 
 export default function ThemeToggle() {
+  const { Button } = useControls()
   const { dark, toggle } = useContext(ThemeContext)
   return <Button
     className="theme-toggle"

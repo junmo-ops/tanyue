@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Alert, Button, InputNumber, Select, Skeleton } from 'antd'
+import { useControls } from '../useControls.js'
 import { DownOutlined, LeftOutlined, ReloadOutlined, RightOutlined } from '@ant-design/icons'
 import { hotPeriodRange, HOT_DAY_VALUES, MAX_HOT_PERIOD } from '../features/threads/filters.js'
 import { insightsUrl, insightResultsUrl, parseInsightsState } from '../features/threads/insightState.js'
@@ -9,6 +9,7 @@ import InsightsResults from '../features/threads/InsightsResults.jsx'
 import ReaderHeader from '../ReaderHeader.jsx'
 
 export default function InsightsPage({ location, onBack, onNavigate, onSeen, seenTids, forums }) {
+  const { Alert, Button, InputNumber, Select, Skeleton } = useControls()
   const { filters, tab, selection, page } = useMemo(() => parseInsightsState(location), [location])
   const { data, loading, error, refresh } = useInsights(filters, { active: !selection })
   const headingRef = useRef(null)

@@ -1,0 +1,32 @@
+.ta-line,.ta-actions,.ta-stephead,.ta-section-actions{display:flex;min-height:44px;align-items:center;justify-content:space-between;gap:8px}
+.ta-line,.ta-step,.ta-record{border-bottom:1px solid var(--line)}
+.ta-actions button,.ta-line button,.ta-stephead button{min-height:44px;color:var(--accent);font-size:13px}
+.ta-body .ty-tabs{padding-inline:16px}
+.ta-warn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;margin-top:8px;padding:0 12px;background:var(--amber-bg)!important;color:var(--amber)!important;border-radius:7px;font-weight:600!important}
+.ta-status{display:inline-block;font-size:12px;line-height:1.5;font-weight:500;background:var(--tint);color:var(--green);border-radius:5px;padding:2px 7px}
+.ta-status.warn{background:var(--amber-bg);color:var(--amber)}.ta-note,.ta-step summary,.ta-muted{color:var(--muted);font-size:12px}.ta-note{padding:5px 0}
+.ta-record{padding:12px 0}.ta-actions{justify-content:flex-end}.ta-actions>button:first-child{margin-right:auto}
+.ta-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ta-step{padding:8px 0}.ta-stephead{justify-content:flex-start}.ta-stephead i{font:600 13px monospace;background:var(--soft);border-radius:5px;padding:4px 6px;color:var(--accent)}.ta-stephead button{margin-left:auto}.ta-step summary{cursor:pointer;min-height:36px;padding-block:8px}
+.ta-metrics{display:flex;gap:24px;border-bottom:1px solid var(--line);padding:14px 0}.ta-metrics>div{flex:1}.ta-metrics small{display:block;color:var(--muted)}.ta-metrics strong{font:600 21px monospace;color:var(--accent)}
+.ta-log{overflow:auto;max-height:28vh;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.ta-settings-save{position:sticky;bottom:0;background:var(--paper);padding:10px 0 max(10px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line)}
+.ta-stephead .ty-choice-trigger{min-width:0;max-width:calc(100% - 42px);margin-left:0;font-size:15px;color:var(--ink);font-weight:600}
+.ta-step-more>summary{min-height:24px;text-align:right;font-size:12px}
+.ta-section-actions{justify-content:flex-end;border-bottom:1px solid var(--line)}
+.ta-disclosure summary{list-style:none;cursor:pointer}
+.ta-disclosure summary::-webkit-details-marker{display:none}
+.ta-disclosure summary span{color:var(--accent);font-size:13px}
+.ta-disclosure[open] summary span{font-size:0}
+.ta-disclosure[open] summary span::after{content:'收起 ﹇';font-size:13px}
+.ty-primary.adm-button.ta-danger{--background-color:transparent;--border-color:transparent;--text-color:var(--ty-danger);background:transparent;color:var(--ty-danger)}
+.ta-settings-save .ty-primary{flex:1}
+.ta-settings-save small{padding-inline:10px;color:var(--muted)}
+
+.ta-settings{display:flex;flex-direction:column;min-height:calc(100dvh - 103px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+.ta-settings-save{margin:auto -16px -18px;padding-inline:16px}
+.ta-settings .ta-line:has(>button){font-size:14px}
+
+.ta-settings .ta-line:has(>button):nth-child(-n+5){border:0}
+.ta-settings .ta-line:has(>button):nth-child(-n+5) > span{color:var(--muted)}
+.ta-settings .ta-line:has(>button):nth-child(-n+5) > button{font-size:14px;font-weight:550;color:var(--ink)}
+.ty-dialog>footer .ta-danger{flex:none;margin-left:auto}

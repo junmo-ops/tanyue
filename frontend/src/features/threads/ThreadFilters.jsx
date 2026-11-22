@@ -1,13 +1,17 @@
 import { useState } from 'react'
-import { Button, DatePicker, Drawer, Form, Input, InputNumber, Popover, Segmented, Select, Switch } from 'antd'
+import { Popover } from 'antd'
+import { useControls } from '../../useControls.js'
 import { DownOutlined, LeftOutlined, RightOutlined, FilterOutlined, ReloadOutlined, SearchOutlined, SyncOutlined, UpOutlined } from '@ant-design/icons'
 import { SORT_OPTIONS, ORDER_OPTIONS, PAGE_SIZE_OPTIONS, RECOMMEND_PERCENT_OPTIONS } from '../../shared.jsx'
 import { DEFAULT_FILTERS, HOT_DAY_VALUES, MAX_HOT_PERIOD, hotPeriodRange } from './filters.js'
-const { RangePicker } = DatePicker
+import MobileSheet from '../../MobileSheet.jsx'
+
 const VIEW_MODE_OPTIONS = [{ label: '随机推荐', value: 'recommend' }, { label: '近期热帖', value: 'hot' }, { label: '全部帖子', value: 'all' }]
 const HOT_DAY_OPTIONS = HOT_DAY_VALUES.map(value => ({ label: `${value} 天`, value }))
 
-export default function ThreadFilters({ form, filters, isMobile, forumOptions, loading, showActions, setShowActions, mobileFiltersOpen, setMobileFiltersOpen, advancedFiltersOpen, setAdvancedFiltersOpen, handleSearch, handleViewModeChange, handleHotDaysChange, handleHotPeriodChange, handleShuffle, handleReset }) {
+export default function ThreadFilters({ searchOpen, onToggleSeen, form, filters, isMobile, forumOptions, loading, showActions, setShowActions, mobileFiltersOpen, setMobileFiltersOpen, advancedFiltersOpen, setAdvancedFiltersOpen, handleSearch, handleViewModeChange, handleHotDaysChange, handleHotPeriodChange, handleShuffle, handleReset }) {
+  const { Button, DatePicker, Form, Input, InputNumber, Segmented, Select, Switch } = useControls()
+  const { RangePicker } = DatePicker
   function renderFilterActions() {
     return <div className="advanced-filter-actions">
               <Button type="primary" htmlType={isMobile ? "button" : "submit"} onClick={isMobile ? () => form.submit() : undefined} loading={loading}>应用筛选</Button>
@@ -18,8 +22,8 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
               }}>收起</Button>
             </div>
   }
-  const FilterSurface = isMobile ? Drawer : 'div'
-  const filterSurfaceProps = isMobile ? { title: '筛选帖子', placement: 'bottom', height: '85dvh', open: mobileFiltersOpen, forceRender: true, onClose: () => setMobileFiltersOpen(false), className: 'thread-filter-drawer', footer: renderFilterActions() } : {}
+  const FilterSurface = isMobile ? MobileSheet : 'div'
+  const filterSurfaceProps = isMobile ? { title: '筛选帖子', open: mobileFiltersOpen, forceRender: true, onClose: () => setMobileFiltersOpen(false), className: 'thread-filter-drawer', footer: renderFilterActions() } : {}
   const [customDaysOpen, setCustomDaysOpen] = useState(false)
   const [customDays, setCustomDays] = useState(14)
   const periodRange = hotPeriodRange(filters)
@@ -37,7 +41,16 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
     if (open) setCustomDays(filters.hot_days)
   }
   const customDaysTrigger = <Button className="hot-days-custom-trigger" type="text" onClick={isMobile ? () => openCustomDays(true) : undefined}>{period === 0 && !filters.hot_anchor ? '近' : '每期'} {filters.hot_days} 天 <DownOutlined /></Button>
+  const periodControls = (
+    <div className="hot-period-controls">
+      <Button type="text" icon={<LeftOutlined />} aria-label="上一周期" disabled={period >= MAX_HOT_PERIOD} onClick={() => handleHotPeriodChange(period + 1)} />
+      <span className="hot-period-range" aria-live="polite" aria-label={`${periodRange.from} 至 ${periodRange.to}`} title={`${periodRange.from} 至 ${periodRange.to}`}>{periodLabel}</span>
+      <Button type="text" icon={<RightOutlined />} aria-label="下一周期" disabled={period === 0} onClick={() => handleHotPeriodChange(period - 1)} />
+      {(period > 0 || filters.hot_anchor) && <Button type="link" className="hot-period-reset" aria-label="回到最近" onClick={() => handleHotPeriodChange(0, true)}>最近</Button>}
+    </div>
+  )
   const customDaysContent = <div className="hot-days-custom-panel">
+    {isMobile && periodControls}
     <Segmented block aria-label="常用周期天数" options={HOT_DAY_OPTIONS} value={customDays} onChange={setCustomDays} />
     <label htmlFor="custom-hot-days">自定义天数（1–365）</label>
     <InputNumber id="custom-hot-days" inputMode="numeric" size={isMobile ? 'large' : 'middle'} min={1} max={365} precision={0} value={customDays} onChange={setCustomDays} onPressEnter={(event) => { event.preventDefault(); event.stopPropagation(); applyCustomDays() }} style={{ width: '100%' }} />
@@ -48,29 +61,37 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
   </div>
   const periodNavigation = filters.view_mode === 'hot' && <div className="hot-period-navigation" aria-label="热帖周期切换">
     {isMobile ? customDaysTrigger : <Popover trigger="click" open={customDaysOpen} onOpenChange={openCustomDays} title="时间范围" content={customDaysContent}>{customDaysTrigger}</Popover>}
-    <div className="hot-period-controls">
-      <Button type="text" icon={<LeftOutlined />} aria-label="上一周期" disabled={period >= MAX_HOT_PERIOD} onClick={() => handleHotPeriodChange(period + 1)} />
-      <span className="hot-period-range" aria-live="polite" aria-label={`${periodRange.from} 至 ${periodRange.to}`} title={`${periodRange.from} 至 ${periodRange.to}`}>{periodLabel}</span>
-      <Button type="text" icon={<RightOutlined />} aria-label="下一周期" disabled={period === 0} onClick={() => handleHotPeriodChange(period - 1)} />
-      {(period > 0 || filters.hot_anchor) && <Button type="link" className="hot-period-reset" aria-label="回到最近" onClick={() => handleHotPeriodChange(0, true)}>最近</Button>}
-    </div>
+    {periodControls}
   </div>
   return (
-<section className="query-panel thread-query-panel">
+<section className={'query-panel thread-query-panel' + (isMobile ? ' compact-reader-query' : '')}>
         <Form form={form} layout="inline" initialValues={DEFAULT_FILTERS} onFinish={handleSearch}>
-          <div className="browse-mode-row">
+          {isMobile ? <>
+            <div className="compact-reader-modes" role="group" aria-label="浏览模式">
+              {[VIEW_MODE_OPTIONS[1], VIEW_MODE_OPTIONS[0], VIEW_MODE_OPTIONS[2]].map(({ value, label }) => (
+                <Button type="text" key={value} aria-pressed={filters.view_mode === value}
+                  onClick={() => handleViewModeChange(value)}>{label}</Button>
+              ))}
+            </div>
+            <div className="compact-reader-tools">
+              {filters.view_mode === 'hot' && <Button type="text" onClick={() => openCustomDays(true)}>
+                <span>{period === 0 && !filters.hot_anchor ? '近' : '每期'} {filters.hot_days} 天 <DownOutlined /></span>
+              </Button>}
+              <Button type="text" aria-pressed={filters.hide_seen} onClick={onToggleSeen}>
+                <span>{filters.hide_seen ? '✓ 隐藏已看' : '隐藏已看'}</span>
+              </Button>
+              <Button type="text" aria-expanded={mobileFiltersOpen} onClick={() => setMobileFiltersOpen(true)}><span>筛选</span></Button>
+              {filters.view_mode === 'recommend' && <Button type="text" disabled={loading} onClick={handleShuffle}><span>换一批</span></Button>}
+            </div>
+          </> : <div className="browse-mode-row">
             <div className="browse-mode-control">
               <span className="browse-mode-label">浏览模式</span>
-              <Segmented
-                aria-label="浏览模式"
-                options={VIEW_MODE_OPTIONS}
-                value={filters.view_mode}
-                onChange={handleViewModeChange}
-              />
+              <Segmented aria-label="浏览模式" options={VIEW_MODE_OPTIONS}
+                value={filters.view_mode} onChange={handleViewModeChange} />
             </div>
             {periodNavigation}
-          </div>
-          <div className="primary-filter-row">
+          </div>}
+          {(!isMobile || searchOpen) && <div className="primary-filter-row">
             <Form.Item name="q" className="primary-search-item">
               <Input
                 allowClear
@@ -81,15 +102,15 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
               />
             </Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} icon={<SearchOutlined />} className="search-submit">查询</Button>
-            <Form.Item name="fid" className="primary-forum-item">
+            {!isMobile && <Form.Item name="fid" className="primary-forum-item">
               <Select aria-label="板块" options={forumOptions} placeholder="全部板块" className="forum-select" onChange={() => form.submit()} />
-            </Form.Item>
+            </Form.Item>}
             {filters.view_mode === 'all' && !isMobile && (
               <Form.Item name="sort" className="primary-sort-item">
                 <Select aria-label="帖子排序" options={SORT_OPTIONS} className="sort-select" onChange={() => form.submit()} />
               </Form.Item>
             )}
-            <div className="primary-filter-actions">
+            {!isMobile && <div className="primary-filter-actions">
             {filters.view_mode === 'recommend' && <Button type="text" className="recommend-shuffle" icon={<SyncOutlined />} loading={loading} onClick={handleShuffle}>换一批</Button>}
             <Button
               type="text"
@@ -104,11 +125,12 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
             >
               筛选
             </Button>
-            </div>
-          </div>
+            </div>}
+          </div>}
 
           <FilterSurface {...filterSurfaceProps}>
           <div id="thread-advanced-filters" className={`advanced-filter-panel ${(isMobile ? mobileFiltersOpen : advancedFiltersOpen) ? 'is-open' : ''}`}>
+            {isMobile && <Form.Item name="fid" label="板块"><Select options={forumOptions} /></Form.Item>}
             {filters.view_mode === 'all' && isMobile && (
               <Form.Item name="sort" label="排序"><Select options={SORT_OPTIONS} /></Form.Item>
             )}
@@ -139,7 +161,7 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
               </Form.Item>
             )}
             <Form.Item name="show_disliked" label="显示不感兴趣" valuePropName="checked"><Switch /></Form.Item>
-            {filters.view_mode !== 'hot' && (
+            {!isMobile && filters.view_mode !== 'hot' && (
               <Form.Item name="hide_seen" label="隐藏已看" valuePropName="checked"><Switch /></Form.Item>
             )}
             <Form.Item name="only_liked" label="只看感兴趣" valuePropName="checked"><Switch /></Form.Item>
@@ -148,7 +170,7 @@ export default function ThreadFilters({ form, filters, isMobile, forumOptions, l
           </div>
           </FilterSurface>
         </Form>
-        {isMobile && <Drawer title="时间范围" placement="bottom" height="auto" className="hot-days-custom-drawer" open={customDaysOpen && filters.view_mode === 'hot'} onClose={() => setCustomDaysOpen(false)}>{customDaysContent}</Drawer>}
+        {isMobile && <MobileSheet title="时间范围" className="hot-days-custom-drawer" open={customDaysOpen && filters.view_mode === 'hot'} onClose={() => setCustomDaysOpen(false)}>{customDaysContent}</MobileSheet>}
       </section>
   )
 }

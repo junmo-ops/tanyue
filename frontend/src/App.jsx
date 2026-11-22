@@ -1,6 +1,7 @@
 import { siteUrl } from './api/site.js'
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ConfigProvider, message, theme } from 'antd'
+import { ConfigProvider, theme } from 'antd'
+import { useControls } from './useControls.js'
 import zhCN from 'antd/locale/zh_CN'
 import './App.css'
 import './Reader.css'
@@ -81,6 +82,7 @@ function getRoute() {
 }
 
 function App() {
+  const { message } = useControls()
   useViewportInsets()
   const [touchInput, setTouchInput] = useState(() => window.matchMedia('(hover: none)').matches)
   useEffect(() => {
@@ -149,7 +151,7 @@ function App() {
       message.error(error.message || '保存已看失败')
       return false
     }
-  }, [])
+  }, [message])
 
   const openInsights = useCallback((filters, tab = 'missed') => {
     listUrlRef.current = `${window.location.pathname}${window.location.search}`

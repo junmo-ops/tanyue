@@ -1,13 +1,12 @@
 import { siteFetch } from '../api/site.js'
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Empty, Form, Input, List, Pagination, Progress, Select, Space, Typography, message } from 'antd'
+import { useControls } from '../useControls.js'
 import { ExportOutlined, MessageOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { COMMENT_PAGE_SIZE_OPTIONS, formatNumber, splitKeywords } from '../shared.jsx'
 
 import useCommentTask from '../features/threads/useCommentTask.js'
 import ReaderHeader from '../ReaderHeader.jsx'
 
-const { Text, Title } = Typography
 
 function highlightCommentText(value, keywords) {
   const text = String(value || '-')
@@ -22,6 +21,8 @@ function highlightCommentText(value, keywords) {
 }
 
 export default function ThreadDetailPage({ tid, onBack }) {
+  const { Alert, Button, Empty, Form, Input, List, Pagination, Progress, Select, Space, message, Typography } = useControls()
+  const { Text, Title } = Typography
   const [detail, setDetail] = useState({ thread: null, comments: [] })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)

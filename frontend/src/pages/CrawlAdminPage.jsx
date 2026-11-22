@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Card, Collapse, Descriptions, Drawer, Empty, Form, Grid, Input, InputNumber, Pagination, Segmented, Select, Space, Spin, Tag, Typography, message } from 'antd'
+import { Grid } from 'antd'
+import { useControls } from '../useControls.js'
 import { postJson, requestJson } from '../api/client.js'
 import AdminControls from '../features/crawl/AdminControls.jsx'
 import CrawlWorkModal from '../features/crawl/CrawlWorkModal.jsx'
@@ -17,6 +18,7 @@ const states = {
 const time = (value) => value ? new Date(`${value.replace(' ', 'T')}Z`).toLocaleString('zh-CN', { hour12: false }) : '—'
 
 export default function CrawlAdminPage({ onBack }) {
+  const { Alert, Button, Card, Collapse, Descriptions, Drawer, Empty, Form, Input, InputNumber, Pagination, Segmented, Select, Space, Spin, Tag, Typography, message } = useControls()
   const [form] = Form.useForm()
   const screens = Grid.useBreakpoint()
   const isMobile = screens.md === false

@@ -1,8 +1,10 @@
+import MobileSheet from '../MobileSheet.jsx'
 import { siteFetch, siteUrl } from '../api/site.js'
 import SiteMenu from '../SiteMenu.jsx'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, Checkbox, Drawer, Empty, Form, Grid, Pagination, Skeleton, Space, Spin, Table, Tag, Typography, message } from 'antd'
-import { BarChartOutlined, CommentOutlined, DownOutlined, EyeOutlined, FireOutlined, MessageOutlined, MoreOutlined, SyncOutlined, TagsOutlined, TrophyOutlined } from '@ant-design/icons'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { Grid, Table } from 'antd'
+import { useControls } from '../useControls.js'
+import { BarChartOutlined, DownOutlined, SearchOutlined, FireOutlined, MessageOutlined, MoreOutlined, SyncOutlined, TagsOutlined, TrophyOutlined } from '@ant-design/icons'
 import useThreadFilters from '../features/threads/useThreadFilters.js'
 import useThreads from '../features/threads/useThreads.js'
 import ThreadFilters from '../features/threads/ThreadFilters.jsx'
@@ -10,9 +12,9 @@ import useThreadColumns from '../features/threads/useThreadColumns.jsx'
 import { FEEDBACK_OPTIONS, feedbackLabel, formatNumber, ORDER_OPTIONS, SORT_OPTIONS } from '../shared.jsx'
 import { DEFAULT_FILTERS, hotPeriodRange, MAX_HOT_PERIOD } from '../features/threads/filters.js'
 import InsightsPreview from '../features/threads/InsightsPreview.jsx'
+import { ThemeContext } from '../appearance.js'
 import ThemeToggle from '../ThemeToggle.jsx'
 
-const { Text, Title } = Typography
 const { useBreakpoint } = Grid
 
 
@@ -24,6 +26,9 @@ function formatStatusTime(value) {
 }
 
 export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOpenAdmin, onKeywordSearchReady, onOpenInsights, onOpenRankings, onSeen: markSeen, seenTids, forums }) {
+  const { Button, Checkbox, Empty, Form, Pagination, Skeleton, Space, Spin, Switch, Tag, message, Typography } = useControls()
+  const { dark, toggle } = useContext(ThemeContext)
+  const { Text, Title } = Typography
   const [form] = Form.useForm()
   const screens = useBreakpoint()
   const isMobile = !screens.md
@@ -39,10 +44,15 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
     ...forums.map(item => ({ label: `${item.forum_name} (${item.thread_count})`, value: item.fid })),
   ], [forums])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const listItems = isMobile && filters.hide_seen
+    ? data.items.filter(thread => !Number(thread.seen))
+    : data.items
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
   const [showActions, setShowActions] = useState(true)
   const [mobileActionTid, setMobileActionTid] = useState('')
-  const showInsightsPreview = filters.view_mode === 'hot' && !(
+  const showInsightsPreview = !isMobile && filters.view_mode === 'hot' && !(
     filters.q?.trim() || filters.exclude_q?.trim() || filters.author_id ||
     filters.hide_seen || filters.only_liked || filters.show_disliked
   )
@@ -127,7 +137,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
     } finally {
       setFeedbackSavingTid('')
     }
-  }, [data.items, filters.show_disliked, requestIdRef, setData])
+  }, [Button, message, data.items, filters.show_disliked, requestIdRef, setData])
 
   const handleCommentFetch = useCallback(async (tid, checked) => {
     setCommentFetchSavingTid(tid)
@@ -152,13 +162,27 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
     } finally {
       setCommentFetchSavingTid('')
     }
-  }, [setData])
+  }, [message, setData])
 
 
   const openThreadAndMarkSeen = useCallback((tid) => {
     markSeen(tid)
     onOpenThread(tid)
   }, [markSeen, onOpenThread])
+
+  async function readMobileThread(event, tid) {
+    const row = event.currentTarget.closest('article')
+    const next = row?.nextElementSibling
+    const top = next?.getBoundingClientRect().top
+    const wasScrolled = window.scrollY > 0
+    if (await markSeen(tid) && filters.hide_seen && next && wasScrolled) {
+      requestAnimationFrame(() => {
+        if (next.isConnected && next.getBoundingClientRect().height > 0) {
+          window.scrollBy({ top: next.getBoundingClientRect().top - top, behavior: 'instant' })
+        }
+      })
+    }
+  }
 
   const columns = useThreadColumns({ showActions, feedbackSavingTid, handleFeedback, isMobile, compactStats: !screens.xl, markSeen, openThreadAndMarkSeen, setMobileActionTid })
 
@@ -243,8 +267,27 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
 
 
   return (
-    <main className="app-shell thread-list-shell" hidden={!active}>
-      <header className="thread-hero">
+    <main className="app-shell thread-list-shell thread-feed" hidden={!active}>
+      {isMobile ? <header className="compact-reader-header">
+        <span className="tanyue-mark" aria-label="坛阅">坛</span><SiteMenu />
+        <div className="compact-reader-icons">
+          <Button type="text" aria-label="搜索帖子" aria-expanded={searchOpen} icon={<SearchOutlined />} onClick={() => setSearchOpen(!searchOpen)} />
+          <Button type="text" aria-label="更多功能" icon={<MoreOutlined />} onClick={() => setMenuOpen(true)} />
+        </div>
+        <MobileSheet title="更多功能" open={menuOpen} onClose={() => setMenuOpen(false)}>
+          <nav className="compact-reader-menu" aria-label="功能导航" onClick={() => setMenuOpen(false)}>
+            <Button type="text" href={siteUrl('/rankings')} icon={<TrophyOutlined />} onClick={onOpenRankings}>排行榜</Button>
+            <Button type="text" icon={<BarChartOutlined />} onClick={() => onOpenInsights(filters)}>数据分析</Button>
+            <Button type="text" icon={<TagsOutlined />} onClick={onOpenWords}>随机发现</Button>
+            <Button type="text" icon={<SyncOutlined />} onClick={onOpenAdmin}>采集管理</Button>
+          </nav>
+          <div className="reader-menu-appearance">
+            <span id="reader-menu-theme-label">深色模式</span>
+            <Switch aria-labelledby="reader-menu-theme-label" checked={dark} onChange={toggle} />
+          </div>
+          {dataStatus && <p className="reader-menu-status">已收录 {formatNumber(dataStatus.thread_count)} 篇 · {formatStatusTime(dataStatus.last_sync?.finished_at || dataStatus.database_modified_at)}</p>}
+        </MobileSheet>
+      </header> : <header className="thread-hero">
         <div className="thread-hero-copy">
           <div className="thread-hero-title">
             <FireOutlined className="header-icon" />
@@ -281,22 +324,22 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
           <Button type="text" icon={<TagsOutlined />} onClick={onOpenWords} aria-label="随机发现">随机发现</Button>
           <Button type="text" icon={<SyncOutlined />} onClick={onOpenAdmin}>采集管理</Button>
         </nav>
-      </header>
+      </header>}
 
       <div className="thread-reader-content">
-      <ThreadFilters {...{ form, filters, isMobile, forumOptions, loading, showActions, setShowActions, mobileFiltersOpen, setMobileFiltersOpen, advancedFiltersOpen, setAdvancedFiltersOpen, handleSearch, handleViewModeChange, handleHotDaysChange, handleHotPeriodChange, handleShuffle, handleReset }} />
+      <ThreadFilters onToggleSeen={() => applyFilters({ ...filters, hide_seen: !filters.hide_seen })} {...{ searchOpen, form, filters, isMobile, forumOptions, loading, showActions, setShowActions, mobileFiltersOpen, setMobileFiltersOpen, advancedFiltersOpen, setAdvancedFiltersOpen, handleSearch, handleViewModeChange, handleHotDaysChange, handleHotPeriodChange, handleShuffle, handleReset }} />
 
       <div id="period-insights" hidden={!showInsightsPreview}>
         <InsightsPreview filters={filters} isMobile={isMobile} active={active && showInsightsPreview} onOpen={onOpenInsights} onSeen={markSeen} seenTids={seenTids} refreshKey={insightsRevision} />
       </div>
 
-      <section id="thread-results-start" className="filter-summary" aria-label="当前筛选条件">
+      {(!isMobile || activeFilterChips.some(chip => !['view_mode', 'sort', 'hide_seen'].includes(chip.key))) && <section id="thread-results-start" className="filter-summary" aria-label="当前筛选条件">
         <div className="thread-results-heading">
           <h2>帖子列表</h2><span>{formatNumber(data.total)} 篇</span>
         </div>
         <div className="filter-summary-chips">
           <span className="filter-summary-label">当前条件</span>
-          {activeFilterChips.map((chip) => (
+          {activeFilterChips.filter(chip => !isMobile || !['view_mode', 'sort', 'hide_seen'].includes(chip.key)).map((chip) => (
             <Tag key={chip.key} closable={chip.key !== 'view_mode'} onClose={(event) => {
               event.preventDefault()
               handleRemoveFilter(chip)
@@ -304,7 +347,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
               {chip.label}
             </Tag>
           ))}
-          {filters.view_mode === 'hot' && (
+          {!isMobile && filters.view_mode === 'hot' && (
             <Checkbox
               className="hot-hide-seen-filter"
               checked={filters.hide_seen}
@@ -314,7 +357,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
             </Checkbox>
           )}
         </div>
-      </section>
+      </section>}
 
       {loadError ? (
         <div className="thread-result-state" role="alert">
@@ -322,7 +365,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
           <p>{loadError}</p>
           <Button loading={loading} onClick={() => loadThreads(filters, page)}>重新加载</Button>
         </div>
-      ) : !loading && !data.items.length ? (
+      ) : !loading && !listItems.length ? (
         <div className="thread-result-state">
           <Empty description="没有符合条件的帖子" />
           <Space wrap>
@@ -339,7 +382,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
           <Spin spinning={loading}>
             {data.items.length ? (
               <div className="mobile-thread-list">
-                {data.items.map((thread) => (
+                {listItems.map((thread) => (
                   <article className={`mobile-thread-item ${Number(thread.seen) === 1 ? 'is-seen' : ''}`} key={thread.tid}>
                     <div className="mobile-thread-main">
                       <a
@@ -348,19 +391,16 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
                         target="_blank"
                         rel="noreferrer"
                         title={thread.title}
-                        onClick={() => markSeen(thread.tid)}
+                        onClick={event => readMobileThread(event, thread.tid)}
                       >
                         {thread.title}
                       </a>
                       <div className="mobile-thread-meta">
                         <span className="mobile-forum-badge">{forumLabel(thread.fid)}</span>
-                        <span>{thread.posted_at || '-'}</span>
+                        <time title={thread.posted_at}>{thread.posted_at?.slice(0, 10) || '-'}</time>
                         {Number(thread.seen) === 1 && <span>已看</span>}
+                        <span className="compact-metric">{filters.view_mode === 'all' && filters.sort === 'view_count' ? formatNumber(thread.view_count) + ' 浏览' : formatNumber(thread.reply_count) + ' 回复'}</span>
                       </div>
-                    </div>
-                    <div className="mobile-thread-metrics">
-                      <span aria-label={`${thread.reply_count} 回复`}><CommentOutlined /> {formatNumber(thread.reply_count)} 回复</span>
-                      <span aria-label={`${thread.view_count} 浏览`}><EyeOutlined /> {formatNumber(thread.view_count)} 浏览</span>
                     </div>
                     {showActions && (
                       <Button
@@ -413,10 +453,8 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
         </div>
       )}
       </div>
-        <Drawer
+        <MobileSheet
           title="帖子操作"
-          placement="bottom"
-          height="auto"
           open={isMobile && Boolean(mobileActionThread)}
           onClose={() => setMobileActionTid('')}
           className="mobile-action-drawer"
@@ -462,7 +500,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
               </div>
             </div>
           )}
-        </Drawer>
+        </MobileSheet>
     </main>
   )
 }

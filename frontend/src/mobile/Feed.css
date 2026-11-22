@@ -1,0 +1,24 @@
+.ty-feed-bar .ty-brand{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#19384a;color:white;font:700 20px serif;flex:none}
+.ty-feed-bar>button.ty-site-selector{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left;color:var(--ink);font-size:16px;font-weight:600}
+.ty-feed-bar>button:not(.ty-site-selector){min-width:34px;padding-inline:0;font-size:21px;color:var(--ink)}
+.ty-site-selector svg{width:12px}
+.ty-seen-toggle{min-height:44px;font-size:12px;padding:0 6px}
+.ty-seen-toggle[aria-pressed=true]{color:var(--green);font-weight:600}
+.ty-feed-row{padding:12px 0;border-bottom:1px solid var(--line)}
+.ty-feed-row>a{display:block;text-decoration:none;color:var(--ink)}
+.ty-feed-row strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:16px;line-height:1.48;font-weight:600}
+.ty-feed-row.is-seen strong{font-weight:500;color:var(--muted)}
+.ty-feed-actions{margin:-10px 0 -10px auto;padding:10px 0;color:var(--accent);font-size:13px}
+.ty-read-pages{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin:10px 0}
+.ty-read-pages button{min-height:44px;color:var(--accent)}
+.ty-detail-heading{font-size:22px;line-height:1.45;margin:17px 0 8px!important}
+.ty-read-counts{display:flex;padding:16px 0;border-bottom:1px solid var(--line)}
+.ty-read-counts>div{flex:1;color:var(--muted);font-size:12px}
+.ty-read-counts b{display:block;color:var(--accent);font:600 21px/1.3 ui-monospace,monospace}
+.ty-comment{padding:12px 0;border-bottom:1px solid var(--line)}
+.ty-comment p{margin-top:5px;white-space:pre-wrap;font-size:15px;line-height:1.75}
+.ty-comment small{color:var(--muted);font-size:12px}
+.ty-feed-row{position:relative}
+.ty-feed-row>a::after{content:'';position:absolute;inset:0}
+.ty-feed-actions{position:relative;z-index:1}
+

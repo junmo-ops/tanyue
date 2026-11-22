@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Empty, Pagination, Skeleton } from 'antd'
+import { useControls } from '../../useControls.js'
 import { requestJson } from '../../api/client.js'
 import InsightThreadLinks from './InsightThreadLinks.jsx'
 
 export default function InsightsResults({ selection, page, onPage, onBack, onSeen, seenTids }) {
+  const { Alert, Button, Empty, Pagination, Skeleton } = useControls()
   const [result, setResult] = useState(null)
   const [retry, setRetry] = useState(0)
   const query = new URLSearchParams({

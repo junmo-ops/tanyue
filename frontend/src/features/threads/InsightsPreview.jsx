@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { Alert, Button, Skeleton } from 'antd'
+import { useControls } from '../../useControls.js'
 import { DownOutlined, ReloadOutlined } from '@ant-design/icons'
 import InsightThreadLinks from './InsightThreadLinks.jsx'
 import useInsights from './useInsights.js'
@@ -7,6 +7,7 @@ import { hotPeriodRange } from './filters.js'
 import './PeriodInsights.css'
 
 export default function InsightsPreview({ filters, isMobile, active, onOpen, onSeen, seenTids, refreshKey }) {
+  const { Alert, Button, Skeleton } = useControls()
   const [expanded, setExpanded] = useState(false)
   const bodyId = useId()
   const collapsed = isMobile && !expanded

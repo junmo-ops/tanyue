@@ -1,0 +1,33 @@
+.ty-mobile .ty-ranked{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.ty-ranked>b{font:600 17px/1.5 ui-monospace,monospace;color:var(--muted);padding-top:12px}
+.ty-ranked:first-child>b{color:var(--green)}
+.ty-ranked .ty-row{border:0}
+.ty-discovery-words .ty-tools{padding-inline:0;gap:4px 9px}
+.ty-discovery-words .ty-chip>span{font-size:14px;padding:8px 12px}
+.ty-figures{display:flex;padding:16px 0;border-bottom:1px solid var(--line)}
+.ty-figures>*{flex:1;text-align:left;padding:0}
+.ty-figures small,.ty-chart-axis{font-size:12px;color:var(--muted)}
+.ty-figures strong{display:block;font:600 21px/1.3 ui-monospace,monospace;color:var(--accent)}
+.ty-chart{height:84px;display:flex;align-items:flex-end;gap:4px;overflow:auto;border-bottom:1px solid var(--line)}
+.ty-chart button{padding:0;flex:1 0 5px;height:100%;display:flex;align-items:flex-end}
+.ty-chart i{width:100%;background:#a9c8bf;border-radius:3px 3px 0 0}
+.ty-chart button:last-child i{background:#2b6152}.ty-chart-axis,.ty-pager{display:flex;justify-content:space-between;align-items:center;gap:6px}
+
+
+.ty-rank-calendar {
+  --adm-color-primary:#27586e;
+  --adm-color-light:var(--muted);
+  --adm-color-text:var(--ink);
+  --adm-color-border:var(--line);
+}
+.ty-rank-calendar .adm-calendar-header .adm-calendar-title {font-size:15px;font-weight:650;text-align:left;order:-1}
+.ty-rank-calendar .adm-calendar-header a.adm-calendar-arrow-button:first-child,
+.ty-rank-calendar .adm-calendar-header a.adm-calendar-arrow-button:last-child {display:none}
+.ty-rank-calendar .adm-calendar-header a.adm-calendar-arrow-button {min-width:44px;min-height:44px;display:grid;place-items:center}
+.ty-rank-calendar .adm-calendar-mark {height:34px;padding:0;border-bottom:0;border-top:1px solid var(--line)}
+.ty-rank-calendar .adm-calendar-cells {padding:0;row-gap:2px}
+.ty-rank-calendar .adm-calendar-cell {height:33px;justify-content:center;margin:0}
+.ty-rank-calendar .adm-calendar-cell-top {font-size:14px}
+.ty-rank-calendar .adm-calendar-cell-bottom:empty {display:none}
+.ty-rank-calendar .adm-calendar-cell-disabled {opacity:.65}
+.ty-rank-calendar .adm-calendar-cell-outside {visibility:hidden}

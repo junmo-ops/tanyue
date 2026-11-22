@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Button, Collapse, Descriptions, Progress, Space, Switch, Tag, Typography, message } from 'antd'
+import { useControls } from '../../useControls.js'
 
 const kinds = { sync: '同步帖子列表', details: '补全帖子详情', comments: '抓取已开启的评论', rankings: '采集排行榜' }
 const states = { queued: '排队中', running: '运行中', stopping: '正在停止', cancelled: '已停止', succeeded: '已完成', partial: '部分失败', failed: '失败', interrupted: '服务中断' }
 const time = value => value ? new Date(`${value.replace(' ', 'T')}Z`).toLocaleString('zh-CN', { hour12: false }) : '—'
 
 export function JobResult({ job, observedAt }) {
+  const { Progress, Typography } = useControls()
   const summary = job.progress
   const elapsed = job.started_at ? Math.max(0, Math.floor(((job.finished_at ? new Date(`${job.finished_at.replace(' ', 'T')}Z`).getTime() : observedAt) - new Date(`${job.started_at.replace(' ', 'T')}Z`).getTime()) / 1000)) : 0
   if (!summary || job.status === 'queued') return <Typography.Paragraph type="secondary">已加入队列，前面的任务结束后自动执行。</Typography.Paragraph>
@@ -22,6 +23,7 @@ export function JobResult({ job, observedAt }) {
 }
 
 export default function JobDetail({ job, observedAt, actions, onBack }) {
+  const { Alert, Button, Collapse, Descriptions, Space, Switch, Tag, Typography, message } = useControls()
   const [follow, setFollow] = useState(true)
   const [expanded, setExpanded] = useState([])
   const logRef = useRef(null)

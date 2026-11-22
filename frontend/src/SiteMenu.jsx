@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Checkbox, Dropdown, Form, Input, Modal, Select, Space } from 'antd'
+import { useControls } from './useControls.js'
 import { DownOutlined } from '@ant-design/icons'
 import { postJson, requestJson } from './api/client.js'
 import { siteId, siteUrl } from './api/site.js'
 
 export default function SiteMenu({ first = false }) {
+  const { Alert, Button, Checkbox, Dropdown, Form, Input, Modal, Select, Space } = useControls()
   const [sites, setSites] = useState([])
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')

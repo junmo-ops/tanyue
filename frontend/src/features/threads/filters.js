@@ -53,9 +53,12 @@ const FILTER_URL_KEYS = [
 ]
 
 function readPersistedThreadFilters() {
+  const initial = window.matchMedia('(max-width: 767px)').matches
+    ? { ...DEFAULT_FILTERS, view_mode: 'hot' }
+    : DEFAULT_FILTERS
   try {
     const saved = JSON.parse(window.localStorage.getItem(THREAD_FILTER_STORAGE_KEY) || 'null')
-    if (!saved || typeof saved !== 'object') return DEFAULT_FILTERS
+    if (!saved || typeof saved !== 'object') return initial
     const dateRange = Array.isArray(saved.dateRange)
       ? [saved.dateRange[0] ? dayjs(saved.dateRange[0]) : null, saved.dateRange[1] ? dayjs(saved.dateRange[1]) : null]
       : null
@@ -72,7 +75,7 @@ function readPersistedThreadFilters() {
       dateRange,
     }
   } catch {
-    return DEFAULT_FILTERS
+    return initial
   }
 }
 
