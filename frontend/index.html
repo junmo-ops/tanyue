@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#182230" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      try {
+        if (localStorage.getItem('forum-color-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+      } catch {}
+    </script>
+    <title>论坛浏览器</title>
+  </head>
+  <body>
+    <div id="root">
+      <div role="status" style="padding:48px 24px;text-align:center;font:16px/1.7 system-ui">
+        <p>正在加载论坛…</p>
+        <div id="startup-retry" hidden>
+          <p>加载时间较长，请检查连接或重试。</p>
+          <button type="button" onclick="location.reload()" style="padding:10px 24px;font:inherit">重新加载</button>
+        </div>
+        <noscript>请开启浏览器的 JavaScript 后重新加载。</noscript>
+      </div>
+    </div>
+    <script>
+      setTimeout(function () {
+        var retry = document.getElementById('startup-retry');
+        if (retry) retry.hidden = false;
+      }, 12000);
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

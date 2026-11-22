@@ -1,0 +1,34 @@
+{
+  "site": {
+    "base_url": ""
+  },
+  "database": {
+    "environment": "production",
+    "paths": {
+      "production": "data/forum.db",
+      "test": "data/forum.test.db"
+    }
+  },
+  "list_sync": {
+    "forums": {},
+    "refresh_pages": 4,
+    "known_page_streak": 2,
+    "max_pages_per_fid": 200,
+    "workers": 3
+  },
+  "details": {
+    "limit": 30000,
+    "workers": 3
+  },
+  "comments": {
+    "pages": "all",
+    "page_workers": 5,
+    "refresh_existing": false
+  },
+  "network": {
+    "delay_seconds": 0.5,
+    "jitter_seconds": 0.5,
+    "retries": 2,
+    "retry_backoff_seconds": 3.0
+  }
+}

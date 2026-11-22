@@ -1,0 +1,152 @@
+.rankings-page .thread-hero-title h1:focus {
+  outline: none;
+}
+
+.rankings-controls,
+.rankings-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+}
+
+.rankings-controls .ant-segmented-group {
+  gap: 0;
+}
+
+.rankings-controls .ant-segmented-item {
+  border-bottom: 0;
+  border-radius: 6px;
+}
+
+.rankings-controls .ant-segmented-item-label {
+  min-height: 36px;
+  padding: 0 10px;
+  line-height: 36px;
+  font-size: 14px;
+}
+
+.rankings-controls .ant-segmented-item-selected,
+.rankings-controls .ant-segmented-thumb {
+  background: var(--ui-surface);
+}
+
+.rankings-history {
+  min-width: 152px;
+  max-width: 100%;
+}
+
+.rankings-caption {
+  min-height: 54px;
+  padding-block: 4px;
+  color: var(--ui-muted);
+  font-size: 13px;
+}
+
+.rankings-caption .ant-btn {
+  padding-inline: 8px;
+  color: var(--ui-accent);
+}
+
+.rankings-progress,
+.rankings-alert {
+  margin-block: var(--ui-space-3);
+}
+
+.rankings-progress,
+.rankings-empty {
+  color: var(--ui-muted);
+}
+
+.rankings-title {
+  overflow-wrap: anywhere;
+}
+
+.rankings-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.rankings-value {
+  color: var(--ui-ink);
+  font-weight: 500;
+}
+
+.rankings-page .rankings-position.is-leading {
+  color: var(--ui-accent);
+  font-weight: 600;
+}
+
+.rankings-empty {
+  padding: var(--ui-space-8) 0;
+  text-align: center;
+}
+
+.rankings-empty p {
+  margin: var(--ui-space-2) 0 0;
+}
+
+.rankings-empty a { color: var(--ui-accent); }
+
+@media (max-width: 767px) {
+  .rankings-page.thread-list-shell .thread-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding-bottom: 12px;
+  }
+
+  .rankings-page .thread-hero-actions { width: auto; }
+  .rankings-page .thread-hero-title .ant-typography { font-size: 20px; }
+
+  .rankings-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rankings-controls .ant-segmented-item-label {
+    min-height: var(--ui-touch-target);
+    padding-inline: 3px;
+    line-height: var(--ui-touch-target);
+  }
+
+  .rankings-history.ant-btn {
+    min-width: 0;
+    height: var(--ui-touch-target);
+    justify-content: flex-start;
+  }
+
+  .rankings-caption {
+    column-gap: 4px;
+    row-gap: 0;
+    font-size: 12px;
+  }
+
+  .rankings-page .mobile-thread-metrics {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.rankings-calendar { width: 320px; max-width: 100%; }
+.rankings-calendar-header { display: flex; justify-content: space-between; align-items: center; padding-block: 8px; }
+.rankings-calendar-header .ant-btn { width: 44px; height: 44px; }
+.rankings-calendar p { color: var(--ui-muted); font-size: 12px; margin: 12px 0 0; }
+.rankings-calendar-day { display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 8px; }
+.rankings-calendar-day.is-selected { background: var(--ui-accent-soft); color: var(--ui-accent); font-weight: 600; }
+.rankings-calendar .ant-picker-cell-disabled::before { background: transparent; }
+.rankings-date-drawer .ant-drawer-body { padding: 8px 16px max(16px, env(safe-area-inset-bottom)); }
+.rankings-date-drawer .ant-drawer-content { border-radius: 16px 16px 0 0; max-height: 85dvh; }
+.rankings-date-drawer .rankings-calendar { width: 100%; }
+
+@media (max-width: 359px) {
+  .rankings-page .thread-hero-title .header-icon { display: none; }
+  .rankings-page.thread-list-shell .thread-hero-title .ant-typography { font-size: 18px; }
+}
