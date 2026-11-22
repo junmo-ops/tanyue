@@ -18,7 +18,6 @@ export default function useThreadColumns({ showActions, feedbackSavingTid, handl
               href={record.official_url}
               target="_blank"
               rel="noreferrer"
-              title={title}
               onClick={() => markSeen(record.tid)}
             >
               {title}

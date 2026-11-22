@@ -65,7 +65,7 @@
 .ty-dialog>footer{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 .ty-dialog>footer .ty-primary{flex:1}.ty-dialog>footer>button:not(.ty-primary){min-height:44px;padding:0 10px}
 .ty-menu-line{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:46px;border-bottom:1px solid var(--line);padding:6px 0;width:100%;text-align:left}
-.ty-menu-line>span:last-child{color:var(--accent)}.ty-menu-line .adm-switch{--checked-color:#2b6152}
+.ty-menu-line .ty-icon{color:var(--accent)}.ty-menu-line .adm-switch{--checked-color:#2b6152}
 .ty-onboard h2{font-size:22px;margin:17px 0 8px}.ty-onboard p{margin:10px 0;line-height:1.8}
 .ty-check.adm-checkbox {
   display:flex;
@@ -133,3 +133,42 @@
 .ty-picker .adm-picker-header-button {color:var(--accent)}
 
 .ty-picker .adm-picker {height:min(300px, calc(var(--ui-visible-height, 100dvh) - 20px - env(safe-area-inset-bottom, 0px)))}
+
+.ty-chevron {
+  width:12px;
+  height:12px;
+  flex:none;
+  vertical-align:middle;
+  margin-inline-start:2px;
+}
+.ty-disclosure > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:44px;
+  list-style:none;
+  cursor:pointer;
+}
+.ty-disclosure > summary::-webkit-details-marker {display:none}
+.ty-disclosure-action {
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  color:var(--accent);
+  font-size:13px;
+  white-space:nowrap;
+}
+.ty-disclosure-collapse,
+.ty-disclosure[open] > summary .ty-disclosure-expand {display:none}
+.ty-disclosure[open] > summary .ty-disclosure-collapse {display:inline}
+.ty-disclosure[open] > summary .ty-chevron {transform:rotate(180deg)}
+
+.ty-icon {
+  width:1em;
+  height:1em;
+  vertical-align:-0.125em;
+  flex:none;
+}
+.ty-dialog > header button .ty-icon {width:18px;height:18px}
+.ty-menu-line .ty-icon {width:16px;height:16px}

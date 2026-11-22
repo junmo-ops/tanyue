@@ -1,10 +1,11 @@
+import { AddOutline, CheckOutline } from 'antd-mobile-icons'
 import Checkbox from 'antd-mobile/es/components/checkbox'
 import { useRef, useState } from 'react'
 import Input from 'antd-mobile/es/components/input'
 import Choice from './Choice.jsx'
 import { postJson } from '../api/client.js'
 import { siteUrl } from '../api/site.js'
-import { Bar, Body, Field, Notice, Primary, Sheet } from './ui.jsx'
+import { Bar, Body, Field, Notice, Primary, Sheet, Disclosure } from './ui.jsx'
 
 export default function Sites({ first, onClose }) {
   const [url,setUrl]=useState('')
@@ -45,11 +46,11 @@ export default function Sites({ first, onClose }) {
     {forums && <Sheet title="选择采集板块" onClose={()=>{if(!busy)reset()}} footer={<><button disabled={!!busy} onClick={reset}>返回</button><Primary disabled={!name.trim()||!selected.length||!!busy} onClick={()=>submit('save')}>接入论坛</Primary></>}>
       <Field label="站点名称"><Input value={name} maxLength={80} onChange={setName} /></Field>
       {Object.entries(forums).map(([id,label])=><Checkbox block className="ty-check" key={id} checked={selected.includes(id)}
-        icon={checked=><span aria-hidden="true">{checked?'✓':'＋'}</span>}
+        icon={checked=>checked?<CheckOutline className="ty-icon" aria-hidden="true"/>:<AddOutline className="ty-icon" aria-hidden="true"/>}
         onChange={checked=>setSelected(items=>checked?[...items,id]:items.filter(x=>x!==id))}>{label}</Checkbox>)}
-      <details className="ty-filter-extra"><summary>取样检查</summary><Choice label="取样板块" value={sample} options={Object.entries(forums)} onChange={v=>{setSample(v);setPreview(null)}}/>
+      <Disclosure className="ty-filter-extra" label="取样检查"><Choice label="取样板块" value={sample} options={Object.entries(forums)} onChange={v=>{setSample(v);setPreview(null)}}/>
       <button className="ty-link" disabled={!!busy} onClick={()=>submit('probe')}>预览识别结果</button>
-      {preview && <Notice>{preview.title} · 已识别 {preview.count} 条帖子，{preview.comments} 条回复</Notice>}</details>
+      {preview && <Notice>{preview.title} · 已识别 {preview.count} 条帖子，{preview.comments} 条回复</Notice>}</Disclosure>
       {error && <Notice>{error}</Notice>}
     </Sheet>}</>
 }

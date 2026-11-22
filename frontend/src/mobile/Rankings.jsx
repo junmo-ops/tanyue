@@ -1,8 +1,10 @@
+import { LinkOutline } from 'antd-mobile-icons'
 import { useState } from 'react'
+import { LoadingContent } from '../Loading.jsx'
 import Calendar from 'antd-mobile/es/components/calendar'
 import dayjs from 'dayjs'
 import useDiscoveryData from './useDiscoveryData.js'
-import { Bar,Tabs,Tools,Chip,Body,Notice,Sheet } from './ui.jsx'
+import { Bar,Tabs,Tools,Chip,Body,Notice,Sheet, Chevron } from './ui.jsx'
 import './discovery.css'
 
 const metrics=[['replies','回复'],['views','查看'],['sharetimes','分享'],['favtimes','收藏'],['heats','热度']]
@@ -40,15 +42,15 @@ export default function Rankings({location,go,back}){
     if(d)query.set('date',d)
     go('/rankings?'+query,{replace:true})
   }
-  return <><Bar title="排行榜" back={back} right={<button onClick={()=>{setMonth('');setOpen(true)}}>{selectedDate?dayjs(selectedDate).format('M 月 D 日'):'选择日期'}{historical?'快照':''} ﹀</button>}/>
+  return <><Bar title="排行榜" back={back} right={<button onClick={()=>{setMonth('');setOpen(true)}}>{selectedDate?dayjs(selectedDate).format('M 月 D 日'):'选择日期'}{historical?'快照':''} <Chevron/></button>}/>
     <Tabs items={metrics} value={metric[0]} onChange={m=>navigate(m,period[0],historical?selectedDate:'')}/>
     <Tools>{periods.map(([id,t,h])=><Chip key={id} active={period[0]===id} onClick={()=>navigate(metric[0],id,historical?selectedDate:'')}>{historical?h:t}</Chip>)}{historical&&<button className="ty-link" onClick={()=>navigate(metric[0],period[0])}>回到最新</button>}</Tools>
-    <Body>{listing.error||current.error?<Notice>{listing.error||current.error} <button onClick={listing.error?listing.retry:current.retry}>重试</button></Notice>:!data?<Notice>{date&&listing.data&&!selectedId?'该日期没有这份榜单的快照':'正在读取榜单…'}</Notice>:null}
+    <Body>{listing.error||current.error?<Notice>{listing.error||current.error} <button onClick={listing.error?listing.retry:current.retry}>重试</button></Notice>:!data?(date&&listing.data&&!selectedId?<Notice>该日期没有这份榜单的快照</Notice>:<LoadingContent label="正在读取榜单"/>):null}
       {data?.entries.map(e=><a className="ty-ranked" key={e.tid} href={e.url} target="_blank" rel="noreferrer"><b>{String(e.rank).padStart(2,'0')}</b><div className="ty-row"><strong>{e.title}</strong><span className="ty-meta"><span>{e.forum||e.author_and_date}</span><em>{Number(e.value).toLocaleString()} {metric[1]}</em></span></div></a>)}
       {data&&!data.entries.length&&<Notice>{data.snapshot?'本期榜单暂无帖子':'暂无快照，可在采集管理中采集榜单。'}</Notice>}
       {listing.data&&collecting(listing.data)&&<Notice>已采集 {listing.data.job.completed} / {listing.data.job.total} 份</Notice>}
       {listing.data?.job?.error&&<Notice>{listing.data.job.error}</Notice>}
-      {data?.source_url&&<a className="ty-link" href={data.source_url} target="_blank" rel="noreferrer">查看原榜 ↗</a>}
+      {data?.source_url&&<a className="ty-link" href={data.source_url} target="_blank" rel="noreferrer">查看原榜 <LinkOutline className="ty-icon" aria-hidden="true"/></a>}
     </Body>{open&&<Sheet title="选择榜单日期" onClose={()=>setOpen(false)}>
       <Calendar className="ty-rank-calendar" onPageChange={(year,month)=>setMonth(year+'-'+String(month).padStart(2,'0'))}
         cellRender={calendarCell} selectionMode="single" allowClear={false} value={selectedDate?dayjs(selectedDate).toDate():null}

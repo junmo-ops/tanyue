@@ -13,11 +13,6 @@
 .ta-stephead .ty-choice-trigger{min-width:0;max-width:calc(100% - 42px);margin-left:0;font-size:15px;color:var(--ink);font-weight:600}
 .ta-step-more>summary{min-height:24px;text-align:right;font-size:12px}
 .ta-section-actions{justify-content:flex-end;border-bottom:1px solid var(--line)}
-.ta-disclosure summary{list-style:none;cursor:pointer}
-.ta-disclosure summary::-webkit-details-marker{display:none}
-.ta-disclosure summary span{color:var(--accent);font-size:13px}
-.ta-disclosure[open] summary span{font-size:0}
-.ta-disclosure[open] summary span::after{content:'收起 ﹇';font-size:13px}
 .ty-primary.adm-button.ta-danger{--background-color:transparent;--border-color:transparent;--text-color:var(--ty-danger);background:transparent;color:var(--ty-danger)}
 .ta-settings-save .ty-primary{flex:1}
 .ta-settings-save small{padding-inline:10px;color:var(--muted)}

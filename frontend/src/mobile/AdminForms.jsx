@@ -1,6 +1,7 @@
+import { AddOutline, DownOutline, UpOutline } from 'antd-mobile-icons'
 import Input from 'antd-mobile/es/components/input'
 import Switch from 'antd-mobile/es/components/switch'
-import { Field, KV, Section } from './ui.jsx'
+import { Field, KV, Section, Disclosure } from './ui.jsx'
 
 import Choice from './Choice.jsx'
 import { kinds, nextKey } from './AdminData.js'
@@ -18,7 +19,7 @@ export function TaskFields({step,set,forums,showKind=true}){
   </>
 }
 function PageFields({collapsed,children}){
-  return collapsed?<details className="ta-disclosure"><summary className="ta-line">指定抓取页数与起始页 <span>展开 ﹀</span></summary>{children}</details>:children
+  return collapsed?<Disclosure label="指定抓取页数与起始页" className="ta-disclosure" summaryClassName="ta-line">{children}</Disclosure>:children
 }
 export function PlanFields({draft,set,forums}){
   const replace=steps=>set({...draft,steps})
@@ -26,12 +27,12 @@ export function PlanFields({draft,set,forums}){
   return <><Entry label="方案名称" value={draft.name} maxLength={60} onChange={name=>set({...draft,name})}/>
     <Section title="采集步骤" action={<small>{draft.steps.length} 步</small>}/>
     {draft.steps.map((step,i)=><section className="ta-step" key={step._key}>
-      <div className="ta-stephead"><i>{String(i+1).padStart(2,'0')}</i><Choice compact label={`步骤 ${i+1} 任务类型`} value={step.kind} options={Object.entries(kinds)} onChange={kind=>replace(draft.steps.map((s,j)=>j===i?{kind,_key:s._key}:s))}/>{draft.steps.length>1&&<button type="button" onClick={()=>move(i,i?i-1:1)}>{i?'↑ 上移':'↓ 下移'}</button>}</div>
-      {step.kind==='sync'?<TaskFields showKind={false} step={step} forums={forums} set={next=>replace(draft.steps.map((s,j)=>j===i?{...next,_key:s._key}:s))}/>:step.kind!=='rankings'&&<details><summary>{step.kind==='details'?'处理上限 · '+(step.limit||'使用采集配置'):'仅处理已开启抓评的帖子'} ›</summary>
-        <TaskFields showKind={false} step={step} forums={forums} set={next=>replace(draft.steps.map((s,j)=>j===i?{...next,_key:s._key}:s))}/></details>}
-      {draft.steps.length>1&&<details className="ta-step-more"><summary>步骤操作</summary><button className="ty-link" onClick={()=>replace(draft.steps.filter((_,j)=>i!==j))}>移除此步</button></details>}
+      <div className="ta-stephead"><i>{String(i+1).padStart(2,'0')}</i><Choice compact label={`步骤 ${i+1} 任务类型`} value={step.kind} options={Object.entries(kinds)} onChange={kind=>replace(draft.steps.map((s,j)=>j===i?{kind,_key:s._key}:s))}/>{draft.steps.length>1&&<button type="button" onClick={()=>move(i,i?i-1:1)}>{i?<><UpOutline className="ty-icon" aria-hidden="true"/> 上移</>:<><DownOutline className="ty-icon" aria-hidden="true"/> 下移</>}</button>}</div>
+      {step.kind==='sync'?<TaskFields showKind={false} step={step} forums={forums} set={next=>replace(draft.steps.map((s,j)=>j===i?{...next,_key:s._key}:s))}/>:step.kind!=='rankings'&&<Disclosure label={step.kind==='details'?'处理上限 · '+(step.limit||'使用采集配置'):'仅处理已开启抓评的帖子'}>
+        <TaskFields showKind={false} step={step} forums={forums} set={next=>replace(draft.steps.map((s,j)=>j===i?{...next,_key:s._key}:s))}/></Disclosure>}
+      {draft.steps.length>1&&<Disclosure className="ta-step-more" label="步骤操作"><button className="ty-link" onClick={()=>replace(draft.steps.filter((_,j)=>i!==j))}>移除此步</button></Disclosure>}
     </section>)}
-    <button className="ty-link" disabled={draft.steps.length>=10} onClick={()=>replace([...draft.steps,{kind:'details',_key:nextKey()}])}>＋ 添加步骤</button></>
+    <button className="ty-link" disabled={draft.steps.length>=10} onClick={()=>replace([...draft.steps,{kind:'details',_key:nextKey()}])}><AddOutline className="ty-icon" aria-hidden="true"/> 添加步骤</button></>
 }
 export function ScheduleFields({draft,set,presets}){
  const update=(k,v)=>set({...draft,[k]:v})

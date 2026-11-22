@@ -1,7 +1,10 @@
+import { RightOutline } from 'antd-mobile-icons'
 import { useState } from 'react'
+import { LoadingContent } from '../Loading.jsx'
 import Input from 'antd-mobile/es/components/input'
 import Choice from './Choice.jsx'
-import { Bar,Body,Tools,Chip,Tabs,Section,KV,Field,Row,Notice,Sheet,Primary } from './ui.jsx'
+import { siteUrl } from '../api/site.js'
+import { Bar,Body,Tools,Chip,Tabs,Section,KV,Field,Row,Notice,Sheet,Primary, Chevron } from './ui.jsx'
 import { insightsUrl,insightResultsUrl,parseInsightsState } from '../features/threads/insightState.js'
 import { hotPeriodRange,MAX_HOT_PERIOD } from '../features/threads/filters.js'
 import useInsights from '../features/threads/useInsights.js'
@@ -12,10 +15,17 @@ const tabs=[['missed','漏看'],['growth','增长'],['overview','概览'],['auth
 const num=value=>Number(value||0).toLocaleString()
 function Threads({items=[],go,seen,onSeen,growth=false}){
   if(!items.length)return <Notice>当前范围没有符合条件的帖子。</Notice>
-  return items.map(t=><Row key={t.tid} title={t.title}
-    meta={[t.forum_name,t.posted_at?.slice(0,10),(seen[t.tid]||t.seen)?'已看':'',growth?'浏览 +'+num(t.view_growth):''].filter(Boolean).join('　')}
-    end={growth?'回复 +'+num(t.reply_growth):num(t.reply_count)+' 回复'}
-    onClick={()=>{onSeen(t.tid);go('/thread/'+encodeURIComponent(t.tid))}}/>)
+  return items.map(thread=>{
+    const localPath='/thread/'+encodeURIComponent(thread.tid)
+    const alreadySeen=seen[thread.tid]||Number(thread.seen)
+    const markRead=()=>{if(!alreadySeen)onSeen(thread.tid)}
+    return <Row key={thread.tid} className="ty-insight-thread"
+      title={<a href={thread.official_url||siteUrl(localPath)} target={thread.official_url?'_blank':undefined}
+        rel="noreferrer" onClick={markRead}>{thread.title}</a>}
+      meta={[thread.forum_name,thread.posted_at?.slice(0,10),alreadySeen?'已看':'',growth?'浏览 +'+num(thread.view_growth):''].filter(Boolean).join('　')}
+      end={<button type="button" className="ty-insight-comments" aria-label={'查看本地评论：'+thread.title}
+        onClick={()=>{markRead();go(localPath)}}>{growth?'回复 +'+num(thread.reply_growth):num(thread.reply_count)+' 回复'}</button>}/>
+  })
 }
 function Results({selection,page,go,back,forums,onPage,seen,onSeen}){
   const {fid,q,authorId,dateFrom,dateTo,hideSeen}=selection
@@ -24,7 +34,7 @@ function Results({selection,page,go,back,forums,onPage,seen,onSeen}){
   const forum=forums.find(f=>String(f.fid)===String(fid))?.forum_name||fid||'全部板块'
   return <><Bar title="分析结果" back={back}/><Tools>{[dateFrom.slice(5)+' — '+dateTo.slice(5),forum,hideSeen?'尚未看过':'',q,selection.authorName].filter(Boolean).map((s,i)=><span key={i} className="ty-chip"><span>{s}</span></span>)}</Tools><Body>
     <Section title={hideSeen?'漏看精选':'相关帖子'} action={data&&'共 '+num(data.total)+' 篇'}/>
-    {error?<Notice>{error} <button onClick={retry}>重试</button></Notice>:!data?<Notice>正在读取帖子…</Notice>:<><Threads items={data.items} {...{go,seen,onSeen}}/>{data.total>20&&<div className="ty-pager"><button className="ty-link" disabled={page<=1} onClick={()=>onPage(page-1)}>上一页</button><span>{page} / {Math.ceil(data.total/20)}</span><button className="ty-link" disabled={page*20>=data.total} onClick={()=>onPage(page+1)}>下一页</button></div>}</>}
+    {error?<Notice>{error} <button onClick={retry}>重试</button></Notice>:!data?<LoadingContent/>:<><Threads items={data.items} {...{go,seen,onSeen}}/>{data.total>20&&<div className="ty-pager"><button className="ty-link" disabled={page<=1} onClick={()=>onPage(page-1)}>上一页</button><span>{page} / {Math.ceil(data.total/20)}</span><button className="ty-link" disabled={page*20>=data.total} onClick={()=>onPage(page+1)}>下一页</button></div>}</>}
   </Body></>
 }
 function Scope({filters,forums,close,apply}){
@@ -54,22 +64,22 @@ export default function Insights({location,go,back,forums,seen,onSeen}){
   if(selection)return <Results {...props} {...{selection,page,forums}} back={back} onPage={next=>go(insightResultsUrl(filters,tab,selection,next),{replace:true})}/>
   const overview=data?.overview
   const maximum=Math.max(1,...(overview?.daily||[]).map(item=>item.count))
-  return <><Bar title="数据分析" back={back} right={<button onClick={()=>setScope(true)}>{filters.hot_period?'每期':'近'} {filters.hot_days} 天 ﹀</button>}/>
+  return <><Bar title="数据分析" back={back} right={<button onClick={()=>setScope(true)}>{filters.hot_period?'每期':'近'} {filters.hot_days} 天 <Chevron/></button>}/>
     <Tabs items={tabs} value={tab} onChange={openTab}/><Body>
-      {error&&<Notice>{error} <button onClick={refresh}>重试</button></Notice>}{loading&&!data&&<Notice>正在整理本期数据…</Notice>}
+      {error&&<Notice>{error} <button onClick={refresh}>重试</button></Notice>}{loading&&!data&&<LoadingContent label="正在整理本期数据"/>}
       {data&&<>
         {tab==='overview'&&<>
           <Section title="本期概览" action={range.from.slice(5)+' — '+range.to.slice(5)}/>
           <div className="ty-figures"><button onClick={()=>explore({})}><small>收录新帖</small><strong>{num(overview.total)}</strong></button><button onClick={()=>explore({hideSeen:true})}><small>尚未看过</small><strong>{num(overview.unseen)}</strong></button><div><small>感兴趣</small><strong>{num(overview.liked)}</strong></div></div>
           <Section title="每日新增"/><div className="ty-chart">{overview.daily.map(d=><button key={d.date} aria-label={d.date+'，'+num(d.count)+' 篇'} onClick={()=>explore({dateFrom:d.date,dateTo:d.date})}><i style={{height:(d.count?Math.max(3,d.count/maximum*100):0)+'%'}}/></button>)}</div>
           <div className="ty-chart-axis"><span>{range.from.slice(5)}</span><span>{range.to.slice(5)}</span></div>
-          <Section title="漏看精选" action={<button onClick={()=>openTab('missed')}>查看全部 ›</button>}/><Threads items={data.missed.items.slice(0,4)} {...props}/>
-          <Section title="板块分布"/>{overview.forums.map(f=><KV key={f.fid} label={f.forum_name}><button className="ty-link" onClick={()=>explore({fid:f.fid})}>{num(f.count)} 篇 ›</button></KV>)}
+          <Section title="漏看精选" action={<button onClick={()=>openTab('missed')}>查看全部 <RightOutline className="ty-icon" aria-hidden="true"/></button>}/><Threads items={data.missed.items.slice(0,4)} {...props}/>
+          <Section title="板块分布"/>{overview.forums.map(f=><KV key={f.fid} label={f.forum_name}><button className="ty-link" onClick={()=>explore({fid:f.fid})}>{num(f.count)} 篇 <RightOutline className="ty-icon" aria-hidden="true"/></button></KV>)}
         </>}
-        {tab==='missed'&&<><Section title="漏看精选" action={<button onClick={()=>explore({hideSeen:true})}>查看全部未看 ›</button>}/><Threads items={data.missed.items} {...props}/></>}
+        {tab==='missed'&&<><Section title="漏看精选" action={<button onClick={()=>explore({hideSeen:true})}>查看全部未看 <RightOutline className="ty-icon" aria-hidden="true"/></button>}/><Threads items={data.missed.items} {...props}/></>}
         {tab==='growth'&&<><Section title="热度增长" action={num(data.growth.eligible_count)+' 篇可比较'}/><Threads items={data.growth.items} growth {...props}/><Notice>{data.growth.note}</Notice></>}
-        {tab==='topics'&&<><Section title="话题变化"/>{!data.topics.length&&<Notice>本期暂无占比上升的话题。</Notice>}{data.topics.map(t=><section key={t.word}><Section title={t.word} action={<button onClick={()=>explore({q:t.word})}>相关帖子 ›</button>}/><Notice>本期 {num(t.count)} 篇 · 占比增长 {Number(t.change_pp).toFixed(1)} 个百分点</Notice><Threads items={t.items} {...props}/></section>)}</>}
-        {tab==='authors'&&<><Section title="作者发现"/>{!data.authors.length&&<Notice>本期没有符合条件的作者。</Notice>}{data.authors.map(a=><section key={a.author_id}><Section title={a.author||a.author_id} action={<button onClick={()=>explore({authorId:a.author_id,authorName:a.author})}>全部作品 ›</button>}/><Notice>{num(a.count)} 篇 · {num(a.liked_count)} 篇感兴趣 · 回复中位数 {num(a.median_replies)}</Notice><Threads items={a.items} {...props}/></section>)}</>}
+        {tab==='topics'&&<><Section title="话题变化"/>{!data.topics.length&&<Notice>本期暂无占比上升的话题。</Notice>}{data.topics.map(t=><section key={t.word}><Section title={t.word} action={<button onClick={()=>explore({q:t.word})}>相关帖子 <RightOutline className="ty-icon" aria-hidden="true"/></button>}/><Notice>本期 {num(t.count)} 篇 · 占比增长 {Number(t.change_pp).toFixed(1)} 个百分点</Notice><Threads items={t.items} {...props}/></section>)}</>}
+        {tab==='authors'&&<><Section title="作者发现"/>{!data.authors.length&&<Notice>本期没有符合条件的作者。</Notice>}{data.authors.map(a=><section key={a.author_id}><Section title={a.author||a.author_id} action={<button onClick={()=>explore({authorId:a.author_id,authorName:a.author})}>全部作品 <RightOutline className="ty-icon" aria-hidden="true"/></button>}/><Notice>{num(a.count)} 篇 · {num(a.liked_count)} 篇感兴趣 · 回复中位数 {num(a.median_replies)}</Notice><Threads items={a.items} {...props}/></section>)}</>}
         <button className="ty-link" disabled={loading} onClick={refresh}>刷新分析</button>
       </>}
     </Body>{scope&&<Scope filters={filters} forums={forums} close={()=>setScope(false)} apply={values=>{setScope(false);go(insightsUrl({...filters,...values},tab),{replace:true})}}/>}</>

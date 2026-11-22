@@ -320,7 +320,7 @@ export default function ThreadListPage({ active, onOpenThread, onOpenWords, onOp
         </div>
         <nav className="thread-hero-actions" aria-label="功能导航">
           <Button type="text" href={siteUrl('/rankings')} icon={<TrophyOutlined />} onClick={onOpenRankings}>排行榜</Button>
-          <Button type="text" icon={<BarChartOutlined />} aria-label="数据分析" title="数据分析" onClick={() => onOpenInsights(filters)}>数据分析</Button>
+          <Button type="text" icon={<BarChartOutlined />} onClick={() => onOpenInsights(filters)}>数据分析</Button>
           <Button type="text" icon={<TagsOutlined />} onClick={onOpenWords} aria-label="随机发现">随机发现</Button>
           <Button type="text" icon={<SyncOutlined />} onClick={onOpenAdmin}>采集管理</Button>
         </nav>

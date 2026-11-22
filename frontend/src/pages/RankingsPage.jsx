@@ -9,17 +9,17 @@ import './RankingsPage.css'
 import RankingDatePicker from './RankingDatePicker.jsx'
 
 const metrics = [
-  { value: 'replies', label: '回复', unit: '回复数' },
-  { value: 'views', label: '查看', unit: '查看数' },
-  { value: 'sharetimes', label: '分享', unit: '分享数' },
-  { value: 'favtimes', label: '收藏', unit: '收藏数' },
-  { value: 'heats', label: '热度', unit: '热度' },
+  { value: 'replies', label: '回复', title: '', unit: '回复数' },
+  { value: 'views', label: '查看', title: '', unit: '查看数' },
+  { value: 'sharetimes', label: '分享', title: '', unit: '分享数' },
+  { value: 'favtimes', label: '收藏', title: '', unit: '收藏数' },
+  { value: 'heats', label: '热度', title: '', unit: '热度' },
 ]
 const periods = [
-  { value: 'today', label: '今日' },
-  { value: 'thisweek', label: '本周' },
-  { value: 'thismonth', label: '本月' },
-  { value: 'all', label: '全部' },
+  { value: 'today', label: '今日', title: '' },
+  { value: 'thisweek', label: '本周', title: '' },
+  { value: 'thismonth', label: '本月', title: '' },
+  { value: 'all', label: '全部', title: '' },
 ]
 const activeStatuses = ['queued', 'running', 'stopping']
 const timeFormat = new Intl.DateTimeFormat('zh-CN', {

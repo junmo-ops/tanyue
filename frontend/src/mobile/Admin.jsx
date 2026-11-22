@@ -1,7 +1,9 @@
+import { AddOutline, MoreOutline, RightOutline } from 'antd-mobile-icons'
 import { useEffect, useRef, useState } from 'react'
+import { LoadingContent } from '../Loading.jsx'
 import Switch from 'antd-mobile/es/components/switch'
 import { postJson, requestJson } from '../api/client.js'
-import { Bar, Body, Tabs, Tools, Chip, Section, Row, KV, Sheet, Primary, Notice } from './ui.jsx'
+import { Bar, Body, Tabs, Tools, Chip, Section, Row, KV, Sheet, Primary, Notice, Disclosure } from './ui.jsx'
 import { Entry, TaskFields, PlanFields, ScheduleFields } from './AdminForms.jsx'
 import Choice from './Choice.jsx'
 import { kinds, nextKey, settingsFields } from './AdminData.js'
@@ -55,10 +57,10 @@ function JobInfo({job,action,back,busy,observedAt}){
  <div className="ta-metrics">{(job.kind==='rankings'?[['已保存',p.completed],['目标',p.total],['失败',p.failed]]:[['新增',p.new],['更新',p.updated],['失败',p.failed]]).map(([l,v])=><div key={l}><small>{l}</small><strong>{v||0}</strong></div>)}</div>
  <KV label="开始时间">{time(job.started_at)}</KV>
  {job.started_at&&<KV label="耗时">{duration(Math.max(0,Math.round(((job.finished_at?jobDate(job.finished_at):observedAt)-jobDate(job.started_at))/1000)))}</KV>}
- <details className="ta-disclosure"><summary className="ta-line">执行信息 <span>展开 ﹀</span></summary><KV label="提交时间">{time(job.created_at)}</KV><KV label="结束时间">{time(job.finished_at)}</KV><KV label="执行进度">{p.completed||0}{p.total_known?' / '+p.total:''}</KV>{job.kind==='comments'&&<KV label="保存评论">{p.saved_comments||0}</KV>}
- <KV label="采集范围">{Object.entries(job.params||{}).map(([k,v])=>({fid:'板块',pages:'页数',start_page:'起始页',limit:'上限',tids:'指定帖子'}[k]||k)+' '+v).join(' · ')||'使用提交时的配置'}</KV></details>
+ <Disclosure label="执行信息" className="ta-disclosure" summaryClassName="ta-line"><KV label="提交时间">{time(job.created_at)}</KV><KV label="结束时间">{time(job.finished_at)}</KV><KV label="执行进度">{p.completed||0}{p.total_known?' / '+p.total:''}</KV>{job.kind==='comments'&&<KV label="保存评论">{p.saved_comments||0}</KV>}
+ <KV label="采集范围">{Object.entries(job.params||{}).map(([k,v])=>({fid:'板块',pages:'页数',start_page:'起始页',limit:'上限',tids:'指定帖子'}[k]||k)+' '+v).join(' · ')||'使用提交时的配置'}</KV></Disclosure>
  {p.errors?.map((e,i)=><Notice key={i}>{[e.target,e.page&&'第 '+e.page+' 页',e.error].filter(Boolean).join(' · ')}</Notice>)}
- <details className="ta-disclosure"><summary className="ta-line">运行日志 <span>展开 ﹀</span></summary><KV label="跟随最新"><Switch checked={follow} onChange={setFollow}/></KV><button className="ty-link" onClick={async()=>{try{await navigator.clipboard.writeText(job.log||'');setCopied('已复制')}catch{setCopied('请长按日志复制')}}}>{copied||'复制日志'}</button><pre ref={log} className="ta-log">{job.log||'暂无日志'}</pre></details>
+ <Disclosure label="运行日志" className="ta-disclosure" summaryClassName="ta-line"><KV label="跟随最新"><Switch checked={follow} onChange={setFollow}/></KV><button className="ty-link" onClick={async()=>{try{await navigator.clipboard.writeText(job.log||'');setCopied('已复制')}catch{setCopied('请长按日志复制')}}}>{copied||'复制日志'}</button><pre ref={log} className="ta-log">{job.log||'暂无日志'}</pre></Disclosure>
  <div className="ta-actions"><button onClick={back}>查看帖子列表</button>{(active(job)||failed(job)||job.status==='cancelled')&&<button disabled={busy||job.status==='stopping'} onClick={()=>action(active(job)?'stop':'resume',job.id)}>{active(job)?job.status==='queued'?'取消排队':'停止任务':'继续未完成'}</button>}</div></>
 }
 function useSubmitGuard(){
@@ -96,9 +98,9 @@ export default function Admin({back}){
  function queued(value){setId(value.id||value.ids?.[0]||'');setPanel('job');setNotice('已加入采集队列')}
  const config=settings||admin?.settings
  const link=(text,fn,disabled=false)=><button type="button" className="ty-link" disabled={disabled||busy} onClick={fn}>{text}</button>
- const jobRow=j=><Row key={j.id} title={<>{kinds[j.kind]} <Badge job={j}/></>} meta={time(j.created_at)+' · '+summary(j)} end="详情 ›" onClick={()=>record(j)}/>
+ const jobRow=j=><Row key={j.id} title={<>{kinds[j.kind]} <Badge job={j}/></>} meta={time(j.created_at)+' · '+summary(j)} end={<>详情 <RightOutline className="ty-icon" aria-hidden="true"/></>} onClick={()=>record(j)}/>
  const errorsBar=offline&&<Notice>暂时无法更新 · {offline}</Notice>
- const settingsRow=f=><div className="ta-line" key={f[1]}><span>{f[2]}</span>{link(String(config[f[0]][f[1]])+' ›',()=>{setSetting(f);open('setting',{value:config[f[0]][f[1]]})})}</div>
+ const settingsRow=f=><div className="ta-line" key={f[1]}><span>{f[2]}</span>{link(<>{config[f[0]][f[1]]} <RightOutline className="ty-icon" aria-hidden="true"/></>,()=>{setSetting(f);open('setting',{value:config[f[0]][f[1]]})})}</div>
  function setOption(section,key,value){setSettings({...config,[section]:{...config[section],[key]:value}})}
  const panelNames={new:'新建采集',preview:'确认采集范围',run:'运行'+draft.name,job:'任务详情',plan:draft.id?'编辑采集方案':'新建采集方案',schedule:draft.id?'编辑定时计划':'新建定时计划',more:'更多操作',delete:draft.type==='presets'?'删除采集方案？':'删除定时计划？',setting:setting?.[2]}
  const buttons={
@@ -110,32 +112,32 @@ export default function Admin({back}){
  delete:[draft.type==='presets'?'删除方案':'删除计划',()=>post(adminUrl+'/'+draft.type+'/delete',{id:draft.id},finish('已删除'))],
  setting:['应用',()=>{const [s,k,,min,max,step]=setting;const n=draft.value;if(typeof n!=='number'||n<min||n>max||(!step&&!Number.isInteger(n))){setError('请输入有效范围内的数值');return}setOption(s,k,n);close()}]
  }
- return <><Bar title="采集管理" back={back} right={['overview','records'].includes(view)&&<Primary disabled={!admin||busy} onClick={()=>open('new',{kind:'sync'})}>＋ 新建采集</Primary>}/>
+ return <><Bar title="采集管理" back={back} right={['overview','records'].includes(view)&&<Primary disabled={!admin||busy} onClick={()=>open('new',{kind:'sync'})}><AddOutline className="ty-icon" aria-hidden="true"/> 新建采集</Primary>}/>
  <Tabs value={view} items={views} onChange={v=>{setView(v);setNotice('');setError('')}}/>
- <Body className={'ta-body'+(view==='settings'?' ta-settings':'')}>{errorsBar}{notice&&<Notice>{notice}</Notice>}{error&&!panel&&<Notice>{error}</Notice>}{!admin&&!offline&&<Notice>正在读取采集状态…</Notice>}
+ <Body className={'ta-body'+(view==='settings'?' ta-settings':'')}>{errorsBar}{notice&&<Notice>{notice}</Notice>}{error&&!panel&&<Notice>{error}</Notice>}{!admin&&!offline&&<LoadingContent label="正在读取采集状态" rows={4}/>}
  {view==='overview'&&<><KV label={offline?'连接异常':jobs?'服务已连接':'连接中'}>执行中 {running.filter(j=>j.status!=='queued').length} · 等待 {running.filter(j=>j.status==='queued').length}</KV>
- {errors.length>0&&<button className="ta-warn" onClick={()=>showRecords('errors')}>{errors.length} 条异常待查看 <span>›</span></button>}
- {running.length>0&&<><Section title="当前队列" action={link('查看队列 ›',()=>showRecords('active'))}/>{jobRow(running[0])}</>}
- <Section title="快捷采集" action={link('管理方案 ›',()=>{setTab('plans');setView('plans')})}/>
- {presets.slice(0,3).map(p=><div className="ta-line" key={p.id}><span>{p.name}</span>{link('预览并运行 ›',()=>previewPlan(p))}</div>)}
+ {errors.length>0&&<button className="ta-warn" onClick={()=>showRecords('errors')}>{errors.length} 条异常待查看 <RightOutline className="ty-icon" aria-hidden="true"/></button>}
+ {running.length>0&&<><Section title="当前队列" action={link(<> 查看队列 <RightOutline className="ty-icon" aria-hidden="true"/></>,()=>showRecords('active'))}/>{jobRow(running[0])}</>}
+ <Section title="快捷采集" action={link(<> 管理方案 <RightOutline className="ty-icon" aria-hidden="true"/></>,()=>{setTab('plans');setView('plans')})}/>
+ {presets.slice(0,3).map(p=><div className="ta-line" key={p.id}><span>{p.name}</span>{link(<> 预览并运行 <RightOutline className="ty-icon" aria-hidden="true"/></>,()=>previewPlan(p))}</div>)}
  {!presets.length&&admin&&<Notice>暂无常用方案</Notice>}
- <Section title="最近采集结果" action={link('全部记录 ›',()=>showRecords('all'))}/>{shown.map(jobRow)}{jobs&&!shown.length&&<Notice>还没有采集记录</Notice>}</>}
+ <Section title="最近采集结果" action={link(<> 全部记录 <RightOutline className="ty-icon" aria-hidden="true"/></>,()=>showRecords('all'))}/>{shown.map(jobRow)}{jobs&&!shown.length&&<Notice>还没有采集记录</Notice>}</>}
  {view==='records'&&<><Tools>{filters.map(([v,l])=><Chip key={v} active={filter===v} onClick={()=>{setFilter(v);setPage(1)}}>{l}</Chip>)}</Tools>
  {filter==='errors'&&shown.length>0?<><Section title="异常记录" action={<small>{filtered.length} 条</small>}/>{shown.map(jobRow)}</>:Object.entries(groups).map(([date,items])=><section key={date}><Section title={date} action={<small>{items.length} 条</small>}/>{items.map(jobRow)}</section>)}
  {!shown.length&&jobs&&<Notice>没有符合条件的任务</Notice>}{totalPages>1&&<div className="ta-line">{link('上一页',()=>setPage(shownPage-1),shownPage<=1)}{shownPage} / {totalPages}{link('下一页',()=>setPage(shownPage+1),shownPage>=totalPages)}</div>}</>}
  {view==='plans'&&<><Tabs items={ [['plans','常用方案'],['schedules','定时计划']] } value={tab} onChange={setTab}/>
- {tab==='plans'?<div className="ta-section-actions">{link('＋ 新建方案',()=>editPlan(),!admin)}</div>:<Section title="定时计划" action={link('＋ 新建计划',()=>editSchedule(),!admin)}/>}
+ {tab==='plans'?<div className="ta-section-actions">{link(<> <AddOutline className="ty-icon" aria-hidden="true"/> 新建方案</>,()=>editPlan(),!admin)}</div>:<Section title="定时计划" action={link(<> <AddOutline className="ty-icon" aria-hidden="true"/> 新建计划</>,()=>editSchedule(),!admin)}/>}
  {(tab==='plans'?presets:schedules).map(r=><article className="ta-record" key={r.id}><b>{r.name}</b> {tab==='schedules'&&<span className="ta-status">{r.enabled?'已启用':'已停用'}</span>}
- {tab==='plans'?<p className="ta-note">{r.steps.map(s=>kinds[s.kind]).join(' → ')}</p>:<><p className="ta-note">{r.mode==='daily'?'每天 '+r.daily_time+' · 北京时间':'每 '+r.every_minutes+' 分钟'}</p><KV label="执行方案">{presets.find(p=>p.id===r.preset_id)?.name||'—'}</KV><KV label="下次执行">{r.enabled&&r.next_run?dayLabel.format(r.next_run*1000)+' '+clock.format(r.next_run*1000):'—'}</KV></>}
+ {tab==='plans'?<p className="ta-note">{r.steps.map((step,index)=><span key={index}>{index>0&&<RightOutline className="ty-icon" aria-hidden="true"/>}{kinds[step.kind]}</span>)}</p>:<><p className="ta-note">{r.mode==='daily'?'每天 '+r.daily_time+' · 北京时间':'每 '+r.every_minutes+' 分钟'}</p><KV label="执行方案">{presets.find(p=>p.id===r.preset_id)?.name||'—'}</KV><KV label="下次执行">{r.enabled&&r.next_run?dayLabel.format(r.next_run*1000)+' '+clock.format(r.next_run*1000):'—'}</KV></>}
  <div className="ta-actions">{tab==='plans'?<>{link('预览并运行',()=>previewPlan(r))}{link('编辑',()=>editPlan(r))}</>:link('编辑计划',()=>editSchedule(r))}
- <button aria-label={r.name+'的更多操作'} onClick={()=>open('more',{type:tab==='plans'?'presets':'schedules',id:r.id,name:r.name,schedule:tab==='schedules'?r:null})}>{tab==='schedules'?'更多 ···':'···'}</button></div></article>)}
+ <button aria-label={r.name+'的更多操作'} onClick={()=>open('more',{type:tab==='plans'?'presets':'schedules',id:r.id,name:r.name,schedule:tab==='schedules'?r:null})}>{tab==='schedules'&&'更多 '}<MoreOutline className="ty-icon" aria-hidden="true"/></button></div></article>)}
  {admin&&!(tab==='plans'?presets:schedules).length&&<Notice>{tab==='plans'?'暂无常用方案':'暂无定时计划'}</Notice>}</>}
  {view==='settings'&&config&&<><Section title="采集配置"/>{settingsFields.filter(f=>f[0]==='list_sync').map(settingsRow)}
- <details className="ta-disclosure"><summary className="ta-line">帖子详情与评论 <span>展开 ﹀</span></summary>{settingsFields.filter(f=>f[0]==='details'||f[0]==='comments').map(settingsRow)}
+ <Disclosure label="帖子详情与评论" className="ta-disclosure" summaryClassName="ta-line">{settingsFields.filter(f=>f[0]==='details'||f[0]==='comments').map(settingsRow)}
  <Choice inline label="每帖评论页数" value={config.comments.pages} options={['all',1,3,5,10,20,50,100].map(v=>[v,v==='all'?'全部页面':v+' 页'])} onChange={v=>setOption('comments','pages',v==='all'?v:Number(v))}/>
- <KV label="重新抓取已完成评论"><Switch checked={config.comments.refresh_existing} onChange={v=>setOption('comments','refresh_existing',v)}/></KV></details>
- <Section title="网络与登录"/><details className="ta-disclosure"><summary className="ta-line">网络与重试 <span>展开 ﹀</span></summary>{settingsFields.filter(f=>f[0]==='network').map(settingsRow)}</details>
- <div className="ta-line"><span>Cookie 与站点访问</span>{link('检查 ›',()=>post(adminUrl+'/check-login',{},r=>setNotice(r.message)))}</div><p className="ta-note">配置将在下次提交任务时生效。</p>
+ <KV label="重新抓取已完成评论"><Switch checked={config.comments.refresh_existing} onChange={v=>setOption('comments','refresh_existing',v)}/></KV></Disclosure>
+ <Section title="网络与登录"/><Disclosure label="网络与重试" className="ta-disclosure" summaryClassName="ta-line">{settingsFields.filter(f=>f[0]==='network').map(settingsRow)}</Disclosure>
+ <div className="ta-line"><span>Cookie 与站点访问</span>{link(<> 检查 <RightOutline className="ty-icon" aria-hidden="true"/></>,()=>post(adminUrl+'/check-login',{},r=>setNotice(r.message)))}</div><p className="ta-note">配置将在下次提交任务时生效。</p>
  <div className="ta-settings-save"><small>{settings?'尚未保存':'已同步'}</small><Primary disabled={!settings||busy} onClick={()=>post(adminUrl+'/settings',settings,()=>{setSettings(null);setNotice('配置已保存')})}>保存配置</Primary></div></>}
  </Body>
  {panel&&<Sheet title={panelNames[panel]} onClose={close} footer={buttons[panel]&&<>{link(panel==='preview'?'返回修改':'取消',()=>panel==='preview'?setPanel('new'):close())}<Primary className={panel==='delete'?'ta-danger':''} disabled={busy} onClick={buttons[panel][1]}>{buttons[panel][0]}</Primary></>}>
@@ -150,7 +152,7 @@ export default function Admin({back}){
    {!value.cookie_available&&!value.anonymous_allowed&&<Notice>Cookie 不可用，请先更新登录信息。</Notice>}
  </section>)}
  {['preview','run'].includes(panel)&&preview[0]?.note&&<p className="ta-note">{preview[0].note}</p>}
- {panel==='job'&&(current?<JobInfo observedAt={jobs.observedAt} job={current} back={back} busy={busy} action={(a,id)=>post(jobsUrl+'/'+a,{id},a==='resume'?queued:()=>setNotice('已发送停止请求'))}/>:<Notice>正在读取任务记录…</Notice>)}
+ {panel==='job'&&(current?<JobInfo observedAt={jobs.observedAt} job={current} back={back} busy={busy} action={(a,id)=>post(jobsUrl+'/'+a,{id},a==='resume'?queued:()=>setNotice('已发送停止请求'))}/>:<LoadingContent label="正在读取任务记录" rows={3}/>)}
  {panel==='more'&&<>{draft.schedule&&<><KV label="最近触发">{draft.schedule.last_result||'尚未触发'}</KV>{link(draft.schedule.enabled?'停用计划':'启用计划',()=>post(adminUrl+'/schedules',{...draft.schedule,enabled:!draft.schedule.enabled},finish('计划已更新')))}</>}{link('删除'+(draft.type==='presets'?'方案':'计划'),()=>setPanel('delete'))}</>}
  {panel==='delete'&&<Notice>将删除「{draft.name}」{draft.type==='presets'?'方案':'计划'}。</Notice>}
  </Sheet>}</>

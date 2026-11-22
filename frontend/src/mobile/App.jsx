@@ -1,3 +1,4 @@
+import { AddOutline, CheckOutline, RightOutline } from 'antd-mobile-icons'
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Switch from 'antd-mobile/es/components/switch'
 import { requestJson, postJson } from '../api/client.js'
@@ -5,6 +6,7 @@ import { siteId, siteUrl } from '../api/site.js'
 import { prefersDark, themeStorageKey } from '../appearance.js'
 import useViewportInsets from '../useViewportInsets.js'
 import Feed from './Feed.jsx'
+import { LoadingPage } from '../Loading.jsx'
 import Sites from './Sites.jsx'
 import { Body, Notice, Sheet } from './ui.jsx'
 import './mobile.css'
@@ -93,15 +95,15 @@ export default function MobileApp(){
   else if(pathname==='/words')page=<Words {...shared}/>
   else if(pathname==='/insights')page=<Insights {...shared}/>
   const siteName=sites?.find(s=>s.id===siteId)?.name||'选择论坛'
-  return <main className="ty-mobile">{!sites?<Body><Notice>{error||'正在读取站点…'}</Notice>{error && <button onClick={()=>{setError('');retry(n=>n+1)}}>重新加载</button>}</Body>:
+  return <main className="ty-mobile">{!sites?(error?<Body><Notice>{error}</Notice><button onClick={()=>{setError('');retry(n=>n+1)}}>重新加载</button></Body>:<LoadingPage pathname={pathname}/> ):
     !sites.length?<Sites first/>:<>
       <div hidden={!feedActive}><Feed {...shared} sites={sites} siteName={siteName} active={feedActive} openSites={()=>setSheet('sites')} openMenu={()=>setSheet('menu')}/></div>
-      <Suspense fallback={<Body><Notice>正在载入页面…</Notice></Body>}>{page}</Suspense>
+      <Suspense fallback={<LoadingPage pathname={pathname}/>}>{page}</Suspense>
       {!feedActive&&!page&&<Body><Notice>页面不存在</Notice><button onClick={back}>返回</button></Body>}
-      {sheet==='menu'&&<Sheet title="更多功能" onClose={()=>setSheet('')}>{menuItems.map(([label,url])=><button key={url} className="ty-menu-line" onClick={()=>go(url)}><span>{label}</span><span>›</span></button>)}
+      {sheet==='menu'&&<Sheet title="更多功能" onClose={()=>setSheet('')}>{menuItems.map(([label,url])=><button key={url} className="ty-menu-line" onClick={()=>go(url)}><span>{label}</span><RightOutline className="ty-icon" aria-hidden="true"/></button>)}
         <div className="ty-menu-line"><span>深色模式</span><Switch aria-label="深色模式" checked={dark} onChange={setDark}/></div>
         {status && <Notice>已收录 {Number(status.thread_count||0).toLocaleString()} 篇{status.last_sync?.finished_at && ' · '+status.last_sync.finished_at}</Notice>}</Sheet>}
-      {sheet==='sites'&&<Sheet title="切换论坛" onClose={()=>setSheet('')}>{sites.map(s=><button key={s.id} className="ty-menu-line" onClick={()=>s.id===siteId?setSheet(''):window.location.assign(siteUrl('/',s.id))}><span>{s.name}</span><span>{s.id===siteId?'✓':''}</span></button>)}<button className="ty-menu-line" onClick={()=>setSheet('add')}>接入其他论坛 <span>＋</span></button></Sheet>}
+      {sheet==='sites'&&<Sheet title="切换论坛" onClose={()=>setSheet('')}>{sites.map(s=><button key={s.id} className="ty-menu-line" aria-current={s.id===siteId ? "true" : undefined} onClick={()=>s.id===siteId?setSheet(''):window.location.assign(siteUrl('/',s.id))}><span>{s.name}</span>{s.id===siteId&&<CheckOutline className="ty-icon" aria-hidden="true"/>}</button>)}<button className="ty-menu-line" onClick={()=>setSheet('add')}>接入其他论坛 <AddOutline className="ty-icon" aria-hidden="true"/></button></Sheet>}
       {sheet==='add'&&<Sites onClose={()=>setSheet('')}/>}
     </>}</main>
 }

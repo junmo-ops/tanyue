@@ -6,8 +6,13 @@ import { SORT_OPTIONS, ORDER_OPTIONS, PAGE_SIZE_OPTIONS, RECOMMEND_PERCENT_OPTIO
 import { DEFAULT_FILTERS, HOT_DAY_VALUES, MAX_HOT_PERIOD, hotPeriodRange } from './filters.js'
 import MobileSheet from '../../MobileSheet.jsx'
 
-const VIEW_MODE_OPTIONS = [{ label: '随机推荐', value: 'recommend' }, { label: '近期热帖', value: 'hot' }, { label: '全部帖子', value: 'all' }]
-const HOT_DAY_OPTIONS = HOT_DAY_VALUES.map(value => ({ label: `${value} 天`, value }))
+// The options are fully visible, so suppress Segmented's automatic native titles.
+const VIEW_MODE_OPTIONS = [
+  { label: '随机推荐', value: 'recommend', title: '' },
+  { label: '近期热帖', value: 'hot', title: '' },
+  { label: '全部帖子', value: 'all', title: '' },
+]
+const HOT_DAY_OPTIONS = HOT_DAY_VALUES.map(value => ({ label: `${value} 天`, value, title: '' }))
 
 export default function ThreadFilters({ searchOpen, onToggleSeen, form, filters, isMobile, forumOptions, loading, showActions, setShowActions, mobileFiltersOpen, setMobileFiltersOpen, advancedFiltersOpen, setAdvancedFiltersOpen, handleSearch, handleViewModeChange, handleHotDaysChange, handleHotPeriodChange, handleShuffle, handleReset }) {
   const { Button, DatePicker, Form, Input, InputNumber, Segmented, Select, Switch } = useControls()

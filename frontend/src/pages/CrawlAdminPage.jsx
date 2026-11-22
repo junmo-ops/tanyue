@@ -15,6 +15,18 @@ const states = {
   running: ['运行中', 'processing'], succeeded: ['已完成', 'success'],
   partial: ['部分失败', 'warning'], failed: ['失败', 'error'], interrupted: ['服务中断', 'warning'],
 }
+const viewOptions = [
+  { value: 'overview', label: '概览', title: '' },
+  { value: 'records', label: '任务记录', title: '' },
+  { value: 'plans', label: '方案与定时', title: '' },
+  { value: 'settings', label: '设置', title: '' },
+]
+const recordFilters = [
+  { value: 'all', label: '全部', title: '' },
+  { value: 'active', label: '进行中', title: '' },
+  { value: 'attention', label: '异常', title: '' },
+  { value: 'history', label: '历史', title: '' },
+]
 const time = (value) => value ? new Date(`${value.replace(' ', 'T')}Z`).toLocaleString('zh-CN', { hour12: false }) : '—'
 
 export default function CrawlAdminPage({ onBack }) {
@@ -135,7 +147,7 @@ export default function CrawlAdminPage({ onBack }) {
         <nav className="thread-query-panel crawl-navigation" aria-label="采集管理导航">
           <div className="browse-mode-row">
             <div className="browse-mode-control">
-              <Segmented value={view} onChange={setView} options={[{ value: 'overview', label: '概览' }, { value: 'records', label: '任务记录' }, { value: 'plans', label: '方案与定时' }, { value: 'settings', label: '设置' }]} />
+              <Segmented value={view} onChange={setView} aria-label="采集管理分区" options={viewOptions} />
             </div>
           </div>
         </nav>
@@ -155,7 +167,7 @@ export default function CrawlAdminPage({ onBack }) {
         </>}
         <AdminControls view={view} isMobile={isMobile} onQueued={queued} onNavigate={setView} onCreate={() => setCreating(true)} forums={data.forums} />
         {(view === 'overview' || view === 'records') && loaded && <Card title={view === 'overview' ? '最近采集结果' : '任务记录'} extra={view === 'overview' ? <Button type="link" onClick={() => { setFilter('all'); setView('records') }}>全部记录</Button> : <Typography.Text type="secondary">保留最近 30 次历史</Typography.Text>}>
-          {view === 'records' && <div className="crawl-record-filters"><Segmented value={filter} onChange={(value) => { setFilter(value); setPage(1) }} options={[{value:'all',label:'全部'}, {value:'active',label:'进行中'}, {value:'attention',label:'异常'}, {value:'history',label:'历史'}]} /></div>}
+          {view === 'records' && <div className="crawl-record-filters"><Segmented value={filter} onChange={(value) => { setFilter(value); setPage(1) }} aria-label="任务记录筛选" options={recordFilters} /></div>}
           {!records.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={view === 'overview' ? '还没有采集结果，从常用方案开始吧' : '没有符合条件的任务'} /> : <div className="crawl-job-list">{records.map((job) => {
             const taskAction = actions(job)
             const details = <Button

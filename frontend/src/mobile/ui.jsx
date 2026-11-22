@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import Popup from 'antd-mobile/es/components/popup'
 import Button from 'antd-mobile/es/components/button'
-import { LeftOutline } from 'antd-mobile-icons'
+import { DownOutline, LeftOutline, CloseOutline } from 'antd-mobile-icons'
 
 export function Bar({ title, right, back }) {
-  return <header className="ty-bar">{back && <button type="button" className="ty-back" onClick={back} aria-label="返回"><LeftOutline /></button>}<h1>{title}</h1>{right}</header>
+  return <header className="ty-bar">{back && <button type="button" className="ty-back" onClick={back} aria-label="返回"><LeftOutline className="ty-icon" aria-hidden="true"/></button>}<h1>{title}</h1>{right}</header>
 }
 export function Body({ children, className = '', ...props }) {
   return <div {...props} className={'ty-body ' + className}>{children}</div>
@@ -28,6 +28,24 @@ export function Row({ title, meta, end, onClick, className = '' }) {
   return onClick ? <button type="button" className={'ty-row '+className} onClick={onClick}>{content}</button> : <div className={'ty-row '+className}>{content}</div>
 }
 export function Notice({ children }) { return <p role="status" className="ty-notice">{children}</p> }
+export function Chevron() {
+  return <DownOutline className="ty-chevron" aria-hidden="true"/>
+}
+
+export function Disclosure({ label, children, className = '', summaryClassName = '' }) {
+  return <details className={'ty-disclosure '+className}>
+    <summary className={summaryClassName}>
+      <span>{label}</span>
+      <span className="ty-disclosure-action">
+        <span className="ty-disclosure-expand">展开</span>
+        <span className="ty-disclosure-collapse">收起</span>
+        <Chevron/>
+      </span>
+    </summary>
+    {children}
+  </details>
+}
+
 export function Sheet({ title, onClose, footer, children }) {
   const titleId = useId()
   const closeRef = useRef(onClose)
@@ -55,7 +73,7 @@ export function Sheet({ title, onClose, footer, children }) {
   return <Popup position="bottom" visible={visible} closeOnMaskClick onClose={onClose} bodyClassName="ty-sheet" maskStyle={{background:"#10253065"}}
     afterShow={()=>dialog.current?.focus({preventScroll:true})}>
     <section ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className="ty-dialog">
-      <div className="ty-handle" aria-hidden="true" /><header><h2 id={titleId}>{title}</h2><button type="button" aria-label="关闭" onClick={onClose}>×</button></header>
+      <div className="ty-handle" aria-hidden="true" /><header><h2 id={titleId}>{title}</h2><button type="button" aria-label="关闭" onClick={onClose}><CloseOutline className="ty-icon" aria-hidden="true"/></button></header>
       <div className="ty-sheet-body">{children}</div>{footer && <footer>{footer}</footer>}
     </section>
   </Popup>

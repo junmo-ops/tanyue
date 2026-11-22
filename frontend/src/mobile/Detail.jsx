@@ -1,4 +1,6 @@
+import { LinkOutline } from 'antd-mobile-icons'
 import { useEffect, useState } from 'react'
+import { LoadingContent } from '../Loading.jsx'
 import Input from 'antd-mobile/es/components/input'
 import Choice from './Choice.jsx'
 import { requestJson } from '../api/client.js'
@@ -42,12 +44,12 @@ export default function Detail({tid,back}) {
   const pages=Math.max(1,Math.ceil((data?.total||0)/filters.page_size))
   return <><Bar back={back} title="帖子详情"/><Body>
     {error&&<Notice>{error} <button onClick={()=>setReload(v=>v+1)}>重新加载</button></Notice>}
-    {loading&&!thread&&<Notice>正在加载帖子…</Notice>}
+    {loading&&!thread&&<LoadingContent variant="detail" rows={4}/>}
     {thread&&<>
       <h2 className="ty-detail-heading">{thread.title}</h2>
       <div className="ty-meta">{[thread.forum_name||'fid '+thread.fid,thread.author,thread.posted_at].filter(Boolean).join('　')}</div>
       <div className="ty-read-counts">{[['回复',thread.reply_count],['浏览',thread.view_count]].map(([label,value])=><div key={label}>{label}<b>{Number(value||0).toLocaleString()}</b></div>)}</div>
-      <KV label="原帖地址"><a href={thread.official_url} target="_blank" rel="noreferrer">打开原帖 ↗</a></KV>
+      <KV label="原帖地址"><a href={thread.official_url} target="_blank" rel="noreferrer">打开原帖 <LinkOutline className="ty-icon" aria-hidden="true"/></a></KV>
       <Section title="评论" action={<button onClick={()=>{setDraft(filters);setOpen(true)}}>筛选</button>}/>
       {filters.q||filters.exclude_q?<Notice>{[filters.q&&'包含 '+filters.q,filters.exclude_q&&'排除 '+filters.exclude_q].filter(Boolean).join(' · ')}</Notice>:null}
       <div aria-busy={loading}>{(data.comments||[]).map((c,i)=><article className="ty-comment" key={c.pid??i}>
