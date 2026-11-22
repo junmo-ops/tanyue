@@ -46,6 +46,14 @@ class MultiSiteTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, '登录'):
                 probe({**BODY, 'fid': '97'})
 
+    def test_browser_check_page_is_distinguished_from_unknown_template(self):
+        check = '<script src="static/safe/js/mainv2.js?v=1"></script>'
+        with patch('forum_backend.services.sites.fetch_page', return_value=check):
+            with self.assertRaisesRegex(ValueError, '浏览器验证页'):
+                discover(BODY)
+        with patch('forum_backend.services.sites.fetch_page', return_value=check + INDEX):
+            self.assertEqual(discover(BODY)['forums'], BODY['forums'])
+
     def request(self, registry, site_id=None):
         request = Mock()
         header = f'X-Forum-Site: {site_id}\r\n' if site_id else ''

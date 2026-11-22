@@ -49,6 +49,8 @@ python3 forum_api.py --host "$(tailscale ip -4)"
 
 ## 备份与开发
 
+默认配置下，每个论坛的数据库位于 `data/sites/<站点ID>/forum.db`，同目录保存站点配置和 Cookie。旧版的 `data/forum.db.sites/` 会在下次启动时整体迁移到 `data/sites/`。
+
 服务停止后备份整个 `data/` 目录，以及自行创建的 `config.json`。各站点的 `cookie.txt` 属于登录凭据，备份应按敏感数据保管。首次安装自动使用 `config.example.json`；需要自定义数据库路径时可复制为 `config.json`。
 
 提交代码前，在项目根目录运行前端检查和后端测试：

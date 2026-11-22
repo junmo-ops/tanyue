@@ -39,10 +39,15 @@ class BoardParser(HTMLParser):
         super().__init__()
         self.base = base
         self.boards = {}
+        self.has_browser_check = False
         self.fid = None
         self.parts = []
 
     def handle_starttag(self, tag, attrs):
+        if tag == 'script':
+            src = urlsplit(dict(attrs).get('src') or '').path.lower()
+            if re.search(r'(?:^|/)static/safe/js/(?:web|mainv[0-9]+)\.js$', src):
+                self.has_browser_check = True
         if tag != 'a':
             return
         self.fid = None
@@ -73,6 +78,9 @@ def discover(body):
     base, cookie = connection(body)
     parser = BoardParser(base)
     parser.feed(fetch_page(urljoin(base, 'forum.php'), cookie, timeout=10, retries=0))
+    if not parser.boards and parser.has_browser_check:
+        raise ValueError('论坛返回了浏览器验证页。请在浏览器中打开该论坛，完成验证并确认能看到板块，'
+                         '再在「登录 Cookie」中填写该域名当前的 Cookie 后重试。')
     if not parser.boards:
         raise ValueError('未识别到板块，请检查论坛安装目录、登录权限或页面模板')
     return {'forums': parser.boards}
@@ -107,10 +115,24 @@ def probe(body):
             'comments': comments, 'rankings': rankings}
 
 
+def sites_directory(database_path):
+    database = Path(database_path)
+    legacy = database.with_name(database.name + '.sites')
+    # Keep custom databases in independent namespaces, even in the same folder.
+    if database.name != 'forum.db':
+        return legacy
+    root = database.parent / 'sites'
+    if legacy.exists():
+        if root.exists() or root.is_symlink():
+            raise ValueError(f'新旧站点目录同时存在，请检查 {root} 和 {legacy}')
+        legacy.rename(root)
+    return root
+
+
 class SiteRegistry:
     def __init__(self, default):
         self.default = default
-        self.root = Path(str(default.database_path) + '.sites')
+        self.root = sites_directory(default.database_path)
         self.lock = threading.RLock()
         self.closed = False
         self.runtimes = {'default': default}

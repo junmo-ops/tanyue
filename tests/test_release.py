@@ -35,8 +35,15 @@ class ReleaseTests(unittest.TestCase):
                 record = registry.add({'url':'https://example.test/', 'name':'论坛', 'forums':{'1':'讨论'}})
             finally:
                 registry.close()
+            sites = Path(root) / 'sites'
+            legacy = Path(root) / 'forum.db.sites'
+            db = sites / record['id'] / 'forum.db'
+            inode = db.stat().st_ino
+            sites.rename(legacy)
             reopened = SiteRegistry(default)
             try:
+                self.assertFalse(legacy.exists())
+                self.assertEqual(db.stat().st_ino, inode)
                 self.assertEqual(reopened.listing()['items'], [record])
             finally:
                 reopened.close()
