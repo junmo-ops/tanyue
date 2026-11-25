@@ -19,7 +19,7 @@ const fields = [
 ]
 const date = (value) => value ? new Date(value * 1000).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) : '—'
 
-export default function AdminControls({ view, isMobile, onQueued, onNavigate, onCreate, forums }) {
+export default function AdminControls({ view, isMobile, onQueued, onNavigate, forums, overviewTask, showOverview }) {
   const { Alert, Button, Card, Collapse, Dropdown, Form, Input, InputNumber, Modal, Select, Space, Switch, Tabs, Tag, Typography, message } = useControls()
   const [data, setData] = useState({ presets: [], schedules: [] })
   const [settingsForm] = Form.useForm()
@@ -111,12 +111,23 @@ export default function AdminControls({ view, isMobile, onQueued, onNavigate, on
   }
   return <>
     {error && <Alert type="error" title={error} />}
-    {view === 'overview' && (!isMobile || data.presets.length > 0) && <Card title="快捷采集" extra={<Button type="link" onClick={() => onNavigate('plans')}>管理方案</Button>}>
-      <div className="crawl-quick-plans">{data.presets.map(plan => <div className="crawl-quick-plan" key={plan.id}>
-        <Typography.Text strong>{plan.name}</Typography.Text><Typography.Text type="secondary">{plan.steps.map(step => labels[step.kind]).join(' → ')}</Typography.Text>
-        <Button loading={busy === plan.id} disabled={!!busy} onClick={() => previewPlan(plan)}>预览并运行</Button>
-      </div>)}{!isMobile && <div className="crawl-quick-plan"><Typography.Text strong>自定义采集</Typography.Text><Typography.Text type="secondary">选择板块、任务类型或指定范围</Typography.Text><Button onClick={onCreate}>新建采集</Button></div>}</div>
-    </Card>}
+    {view === 'overview' && showOverview && <div className={`crawl-console-grid${overviewTask ? '' : ' is-idle'}`}>
+      {overviewTask}
+      <section className="crawl-console-panel crawl-console-shortcuts" aria-labelledby="crawl-shortcuts-title">
+        <div className="crawl-console-panel-head">
+          <h2 id="crawl-shortcuts-title">快捷方案</h2>
+          <Button type="link" onClick={() => onNavigate('plans')}>管理方案</Button>
+        </div>
+        <div className="crawl-console-shortcut-list">
+          {data.presets.map(plan => <div className="crawl-console-shortcut-row" key={plan.id}>
+            <div><strong>{plan.name}</strong>{plan.steps.length > 1 && <p>{plan.steps.map(step => labels[step.kind]).join(' → ')}</p>}</div>
+            <Button className="crawl-console-shortcut" type="link" loading={busy === plan.id}
+              disabled={!!busy} onClick={() => previewPlan(plan)}>预览并运行</Button>
+          </div>)}
+        </div>
+        {data.presets.length === 0 && <p className="crawl-console-muted">暂无常用方案</p>}
+      </section>
+    </div>}
     <Card hidden={!['plans', 'settings'].includes(view)}><Tabs activeKey={view === 'settings' ? 'settings' : controlTab} onChange={setControlTab} items={[
       { key: 'plans', label: '常用方案', children: <>
         <div className="crawl-section-tools"><Button icon={isMobile ? <PlusOutlined /> : undefined} onClick={() => editPlan()}>新建采集方案</Button><Typography.Text type="secondary">每个方案按步骤顺序排队，后续步骤在开始时读取最新待办数据。</Typography.Text></div>

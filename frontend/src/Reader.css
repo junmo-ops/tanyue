@@ -267,13 +267,8 @@
 .crawl-admin .ant-card > .ant-card-head { min-height: 48px; padding: 0; border-bottom: 0; }
 .crawl-admin .ant-card > .ant-card-body { padding: 8px 0; }
 .crawl-admin .ant-btn-link { color: var(--ui-accent); }
-.crawl-admin .crawl-quick-plan { border: 0; border-radius: 0; padding: 12px 0; }
-.crawl-admin .crawl-overview-metrics > div { border: 0; background: var(--ui-canvas); }
-.crawl-admin .crawl-overview-metrics > button { background: var(--ui-canvas); }
 :root:not([data-theme='dark']) .crawl-admin .crawl-status-success { color: #28613c; background: #edf6ef; }
 :root[data-theme='dark'] .crawl-admin .crawl-status-success { color: #9ed7b4; background: #213d37; }
-.crawl-admin .crawl-connection { grid-column: 1 / -1; color: #b9c6d6; margin: 0; }
-.crawl-admin .crawl-connection > span:last-child { display: inline; }
 .crawl-admin .thread-hero-actions > .ant-btn-primary:disabled { color: #b9c6d6; background: #ffffff12; }
 .thread-list-shell .thread-query-panel.crawl-navigation { padding: 0; }
 .crawl-navigation.thread-query-panel .browse-mode-row { margin-bottom: 0; border-bottom: 0; }

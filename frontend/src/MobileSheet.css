@@ -115,9 +115,6 @@
   .crawl-admin .adm-card-header { align-items: center; }
   .crawl-admin .adm-card-header-title { font-size: 16px; }
   .crawl-admin .adm-card-header-extra .adm-button { color: var(--ui-accent); font-size: 13px; }
-  .crawl-admin .crawl-quick-plan > strong { grid-column: 1; font-size: 15px; }
-  .crawl-admin .crawl-quick-plan > span { grid-column: 1; font-size: 13px; }
-  .crawl-admin .crawl-quick-plan > button { grid-column: 2; grid-row: 1 / 3; align-self: center; }
   .crawl-admin .crawl-record-actions > button:first-child { margin-inline-end: auto; }
   .crawl-admin .adm-tabs-content { padding-inline: 0; }
   .crawl-plan-step-toolbar > .adm-form-item { flex: 1 1 124px; min-width: 0; }

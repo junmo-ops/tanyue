@@ -4,16 +4,18 @@ import { useControls } from '../useControls.js'
 import { postJson, requestJson } from '../api/client.js'
 import AdminControls from '../features/crawl/AdminControls.jsx'
 import CrawlWorkModal from '../features/crawl/CrawlWorkModal.jsx'
-import { ArrowLeftOutlined, PlusOutlined, RightOutlined, SyncOutlined } from '@ant-design/icons'
-import JobDetail, { JobResult } from '../features/crawl/JobDetail.jsx'
+import { ArrowLeftOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons'
+import JobDetail from '../features/crawl/JobDetail.jsx'
 import ThemeToggle from '../ThemeToggle.jsx'
+import { CrawlCurrentTask, CrawlRecords } from '../features/crawl/CrawlDashboard.jsx'
+import './CrawlDashboard.css'
 
 const kinds = { sync: '同步帖子列表', details: '补全帖子详情', comments: '抓取已开启的评论', rankings: '采集排行榜' }
 const states = {
-  queued: ['排队中', 'default'],
-  stopping: ['正在停止', 'warning'], cancelled: ['已停止', 'default'],
-  running: ['运行中', 'processing'], succeeded: ['已完成', 'success'],
-  partial: ['部分失败', 'warning'], failed: ['失败', 'error'], interrupted: ['服务中断', 'warning'],
+  queued: '排队中',
+  stopping: '正在停止', cancelled: '已停止',
+  running: '运行中', succeeded: '已完成',
+  partial: '部分失败', failed: '失败', interrupted: '服务中断',
 }
 const viewOptions = [
   { value: 'overview', label: '概览', title: '' },
@@ -27,10 +29,9 @@ const recordFilters = [
   { value: 'attention', label: '异常', title: '' },
   { value: 'history', label: '历史', title: '' },
 ]
-const time = (value) => value ? new Date(`${value.replace(' ', 'T')}Z`).toLocaleString('zh-CN', { hour12: false }) : '—'
 
 export default function CrawlAdminPage({ onBack }) {
-  const { Alert, Button, Card, Collapse, Descriptions, Drawer, Empty, Form, Input, InputNumber, Pagination, Segmented, Select, Space, Spin, Tag, Typography, message } = useControls()
+  const { Alert, Button, Collapse, Descriptions, Drawer, Empty, Form, Input, InputNumber, Segmented, Select, Spin, Typography, message } = useControls()
   const [form] = Form.useForm()
   const screens = Grid.useBreakpoint()
   const isMobile = screens.md === false
@@ -69,7 +70,13 @@ export default function CrawlAdminPage({ onBack }) {
   const running = active.find((item) => item.status !== 'queued')
   const needsAttention = data.items.filter((item) => ['failed', 'partial', 'interrupted'].includes(item.status))
   const history = data.items.filter((item) => !['running', 'stopping', 'queued'].includes(item.status))
-  const filtered = filter === 'active' ? active : filter === 'attention' ? needsAttention : filter === 'history' ? history : data.items
+  const groups = { all: data.items, active, attention: needsAttention, history }
+  const filtered = groups[filter]
+  const currentTask = running ?? active[0]
+  const queuedCount = active.filter(job => job.status === 'queued').length
+  const consoleView = view === 'overview' || view === 'records'
+  const environment = loaded ? (data.environment === 'production' ? '生产环境' : '测试环境') : ''
+  const siteContext = [data.site_name, view !== 'overview' && environment, view !== 'overview' && data.database].filter(Boolean).join(' · ')
   const visiblePage = Math.min(page, Math.max(1, Math.ceil(filtered.length / 8)))
   const records = view === 'overview' ? history.slice(0, 3) : filtered.slice((visiblePage - 1) * 8, visiblePage * 8)
   async function stopJob(id) {
@@ -81,8 +88,8 @@ export default function CrawlAdminPage({ onBack }) {
     } catch (err) { message.error(err.message) }
     finally { setStopping('') }
   }
-  const stopButton = (job) => ['queued', 'running', 'stopping'].includes(job?.status) && (
-    <Button danger size="small" disabled={!!error} loading={stopping === job.id || job.status === 'stopping'} onClick={() => stopJob(job.id)}>
+  const stopButton = (job, quiet = false) => ['queued', 'running', 'stopping'].includes(job?.status) && (
+    <Button danger={!quiet} size="small" disabled={!!error} loading={stopping === job.id || job.status === 'stopping'} onClick={() => stopJob(job.id)}>
       {job.status === 'queued' ? '取消排队' : job.status === 'stopping' ? '正在停止' : '停止任务'}
     </Button>
   )
@@ -129,63 +136,64 @@ export default function CrawlAdminPage({ onBack }) {
     }
     return stopButton(job)
   }
+  function showRecords(nextFilter) {
+    setFilter(nextFilter)
+    setPage(1)
+    setView('records')
+  }
+
+  const navigation = <nav className="thread-query-panel crawl-navigation crawl-console-wrap" aria-label="采集管理导航">
+    <div className="browse-mode-row">
+      <div className="browse-mode-control">
+        <Segmented value={view} onChange={setView} aria-label="采集管理分区" options={viewOptions} />
+      </div>
+    </div>
+  </nav>
+  const headerActions = <div className="thread-hero-actions">
+    <Button type="text" icon={<ArrowLeftOutlined />} onClick={onBack}>返回帖子</Button>
+    {(!isMobile || consoleView) && <Button type="primary" icon={<PlusOutlined />} disabled={!loaded || !!error}
+      onClick={() => setCreating(true)}>新建采集</Button>}
+  </div>
+  const overviewTask = view === 'overview' && currentTask ? <CrawlCurrentTask job={currentTask}
+    title={kinds[currentTask.kind] ?? currentTask.kind} labels={states}
+    onQueue={() => showRecords('active')} onDetails={() => setSelected(currentTask.id)}
+    action={stopButton(currentTask, true)} /> : null
+
   return (
-    <main className="app-shell thread-list-shell crawl-admin">
-      <header className="thread-hero">
-        <div className="thread-hero-copy">
-          <div className="thread-hero-title"><SyncOutlined className="header-icon" /><Typography.Title level={1}>采集管理</Typography.Title><ThemeToggle /></div>
-          <div className="data-status-line crawl-connection"><span className={`environment-badge ${data.environment === 'test' ? 'is-test' : ''}`}>{loaded ? data.environment === 'production' ? '生产环境' : '测试环境' : '连接中'}</span><span>{data.site_name}</span><span>{data.database}</span><span>{error ? '连接异常 · 当前显示上次获取的数据' : loaded ? '服务已连接 · 自动更新' : '正在获取任务'}</span></div>
-        </div>
-        <div className="thread-hero-actions">
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={onBack}>返回帖子</Button>
-          {(!isMobile || view === 'overview' || view === 'records') && (
-            <Button type="primary" icon={<PlusOutlined />} disabled={!loaded || !!error} onClick={() => setCreating(true)}>新建采集</Button>
-          )}
+    <main className={`app-shell thread-list-shell crawl-admin crawl-console${consoleView ? ' crawl-console-workspace' : ''}`}>
+      <header className="crawl-console-header">
+        <div className="crawl-console-wrap crawl-console-masthead">
+          <div className="crawl-console-brand">
+            <span className="crawl-console-mark" aria-hidden="true">坛</span>
+            <div><h1>采集管理</h1>{siteContext && <p>{siteContext}</p>}</div>
+            <ThemeToggle />
+          </div>
+          {headerActions}
         </div>
       </header>
-      <div className="thread-reader-content crawl-admin-content">
-        <nav className="thread-query-panel crawl-navigation" aria-label="采集管理导航">
-          <div className="browse-mode-row">
-            <div className="browse-mode-control">
-              <Segmented value={view} onChange={setView} aria-label="采集管理分区" options={viewOptions} />
-            </div>
-          </div>
-        </nav>
+      <div className="crawl-console-nav">{navigation}</div>
+      <div className="crawl-admin-content crawl-console-wrap crawl-console-content">
         {error && <Alert type="error" showIcon title="暂时无法获取最新状态，正在自动重连" description={error} />}
         {!loaded && !error && <Spin tip="正在加载采集状态"><div style={{ height: 120 }} /></Spin>}
-        {view === 'overview' && loaded && <>
-          <div className="crawl-overview-metrics">
-            <div><span>当前执行</span><strong>{running ? kinds[running.kind] : '暂无运行任务'}</strong></div>
-            <div><span>等待执行</span><strong>{active.filter((j) => j.status === 'queued').length}<small> 个任务</small></strong></div>
-            <button onClick={() => { setFilter('attention'); setPage(1); setView('records') }}><span>异常记录</span><strong>{needsAttention.length}<small> 条记录</small></strong></button>
-          </div>
-          {active.length > 0 && <Card title={running ? '正在采集' : '等待执行'} extra={<Button type="link" onClick={() => { setFilter('active'); setPage(1); setView('records') }}>查看队列 ({active.length})</Button>}>
-            <div className="crawl-task-heading"><Typography.Text strong>{kinds[(running || active[0]).kind]}</Typography.Text><Tag color={states[(running || active[0]).status]?.[1]}>{states[(running || active[0]).status]?.[0]}</Tag></div>
-            <JobResult job={running || active[0]} observedAt={observedAt} />
-            <Space wrap className="crawl-job-actions"><Button type={isMobile ? 'text' : 'default'} onClick={() => setSelected((running || active[0]).id)}>查看详情</Button>{actions(running || active[0])}</Space>
-          </Card>}
-        </>}
-        <AdminControls view={view} isMobile={isMobile} onQueued={queued} onNavigate={setView} onCreate={() => setCreating(true)} forums={data.forums} />
-        {(view === 'overview' || view === 'records') && loaded && <Card title={view === 'overview' ? '最近采集结果' : '任务记录'} extra={view === 'overview' ? <Button type="link" onClick={() => { setFilter('all'); setView('records') }}>全部记录</Button> : <Typography.Text type="secondary">保留最近 30 次历史</Typography.Text>}>
-          {view === 'records' && <div className="crawl-record-filters"><Segmented value={filter} onChange={(value) => { setFilter(value); setPage(1) }} aria-label="任务记录筛选" options={recordFilters} /></div>}
-          {!records.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={view === 'overview' ? '还没有采集结果，从常用方案开始吧' : '没有符合条件的任务'} /> : <div className="crawl-job-list">{records.map((job) => {
-            const taskAction = actions(job)
-            const details = <Button
-              type={isMobile ? 'text' : 'default'}
-              className="crawl-job-detail-link"
-              icon={isMobile ? <RightOutlined /> : undefined}
-              iconPlacement="end"
-              onClick={() => setSelected(job.id)}
-            >详情</Button>
-            return <article className="crawl-job-row" key={job.id}>
-              <div className="crawl-job-identity"><div className="crawl-task-heading"><Typography.Text strong>{kinds[job.kind]}</Typography.Text><Tag className={job.status === 'succeeded' ? 'crawl-status-success' : undefined} color={states[job.status]?.[1]}>{states[job.status]?.[0]}</Tag></div><Typography.Text type="secondary">{time(job.created_at)}</Typography.Text></div>
-              {isMobile && details}
-              <div className="crawl-job-result">{job.kind === 'rankings' ? `已保存 ${job.progress?.completed || 0} 份 · 失败 ${job.progress?.failed || 0} 份` : job.progress ? `新增 ${job.progress.new} · 更新 ${job.progress.updated} · 失败 ${job.progress.failed}` : '等待执行'}{job.kind === 'comments' && <span>保存评论 {job.progress?.saved_comments || 0}</span>}</div>
-              {(!isMobile || taskAction) && <Space wrap className="crawl-job-actions">{!isMobile && details}{taskAction}</Space>}
-            </article>
-          })}</div>}
-          {view === 'records' && filtered.length > 8 && <Pagination className="crawl-record-pagination" simple current={visiblePage} pageSize={8} total={filtered.length} onChange={setPage} showSizeChanger={false} />}
-        </Card>}
+        {view === 'overview' && loaded && <div className="crawl-console-status" aria-label="采集状态">
+          <span className="crawl-console-health">
+            <span className={`crawl-console-signal${error ? ' is-offline' : ''}`} aria-hidden="true" />
+            {error ? '连接异常' : '服务已连接'}
+            <small>{environment}</small>
+          </span>
+          <span>运行中 <strong>{active.length - queuedCount}</strong></span>
+          <span>等待 <strong>{queuedCount}</strong></span>
+          {needsAttention.length > 0 && <Button className="crawl-console-attention" type="text"
+            onClick={() => showRecords('attention')}>异常 {needsAttention.length} 条 <RightOutlined /></Button>}
+        </div>}
+        <AdminControls view={view} isMobile={isMobile} onQueued={queued} onNavigate={setView}
+          forums={data.forums} overviewTask={overviewTask} showOverview={loaded} />
+        {consoleView && loaded && <CrawlRecords
+          overview={view === 'overview'} records={records}
+          filterOptions={recordFilters.map(option => ({ ...option, label: `${option.label} ${groups[option.value].length}` }))}
+          filter={filter} onFilter={showRecords} count={filtered.length} page={visiblePage} onPage={setPage}
+          onAll={() => showRecords('all')} onDetails={setSelected} onStop={stopJob} onResume={resume}
+          busy={submitting} stopping={stopping} offline={!!error} kinds={kinds} labels={states} />}
       </div>
       <Drawer className="crawl-detail-drawer" title="任务详情" placement={isMobile ? 'bottom' : 'right'} height={isMobile ? '85dvh' : undefined} open={!!selected} onClose={() => setSelected('')} width={screens.md ? 620 : '100%'}>
         {current ? <JobDetail key={current.id} job={current} observedAt={observedAt} actions={actions(current)} onBack={onBack} /> : <Empty description="该记录已不在最近任务中" />}
